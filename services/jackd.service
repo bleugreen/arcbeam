@@ -1,0 +1,13 @@
+[Unit]
+Description=JACK Sound Server
+After=sound.target
+
+[Service]
+LimitRTPRIO=infinity
+LimitMEMLOCK=infinity
+User=dev
+Group=audio
+ExecStart=/usr/bin/jackd --realtime -d alsa -r 44100 -p 128 -n 2 -d hw:v15
+
+[Install]
+WantedBy=multi-user.target

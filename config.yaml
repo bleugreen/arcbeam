@@ -1,0 +1,21 @@
+# Recording Settings
+recording:
+  path: ./data
+  filetype: wav  # voc, wav, raw or au
+  overlap_sec: 5.0
+  process_buffer: 0.5  # Recording Buffer length (increase if hitting buffer overflow)
+  nice_priority: -10  # Priority setting (lower is higher priority, default 0)
+  format: FLOAT_LE  # Format of recording files
+
+# Library Settings
+library:
+  path: /home/dev/crec
+  filetype: flac  # flac, ogg, wav, mp3 or m4a
+  delete_on_export: false # if 'true', source files will be deleted after exporting
+
+# Audio Settings
+audio:
+  device: hw:v15  # Set this to "hw:[your device name]" found by calling `aplay -l`
+  samplerate: 44100
+  channels: 2
+  period: 128  # Num frames per packet (i think)
