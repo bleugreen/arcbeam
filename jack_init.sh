@@ -36,6 +36,8 @@ read_config_value() {
 # Kill existing jackd and shairport-sync processes
 kill_process "rec/main.py"
 kill_process "btn_test.py"
+kill_process "status_led.py"
+kill_process "monitor.py"
 kill_process "shairport-sync"
 kill_process "alsa_out"
 kill_process "alsa_out"
@@ -59,8 +61,10 @@ jackd -d alsa -r "$SAMPLERATE" -p "$PERIOD" -n "$CHANNELS" -d "$DEVICE" &
 sleep 1
 
 # Start applications
-alsa_out -d hw:Loopback,1,3 -j "Loopback0" &
+
 alsa_out -d hw:Loopback,1,1 -j "Loopback1" &
+alsa_out -d hw:Loopback,1,3 -j "Loopback3" &
+alsa_out -d hw:Loopback,1,5 -j "Loopback5" &
 shairport-sync &
 sleep 1
 
@@ -68,13 +72,18 @@ sleep 1
 jack_connect shairport-sync:out_L system:playback_1
 jack_connect shairport-sync:out_R system:playback_2
 
-jack_connect shairport-sync:out_L Loopback0:playback_1
-jack_connect shairport-sync:out_R Loopback0:playback_2
-
 jack_connect shairport-sync:out_L Loopback1:playback_1
 jack_connect shairport-sync:out_R Loopback1:playback_2
 
+jack_connect shairport-sync:out_L Loopback3:playback_1
+jack_connect shairport-sync:out_R Loopback3:playback_2
+
+jack_connect shairport-sync:out_L Loopback5:playback_1
+jack_connect shairport-sync:out_R Loopback5:playback_2
+
 echo "JACK session set up complete. Starting Listener"
 /home/dev/env/bin/python /home/dev/cymatic-rec/startup.py
-# /home/dev/env/bin/python /home/dev/cymatic-rec/monitor.py &
-/home/dev/env/bin/python /home/dev/cymatic-rec/btn_test.py
+
+/home/dev/env/bin/python /home/dev/cymatic-rec/monitor.py &
+/home/dev/env/bin/python /home/dev/cymatic-rec/status_led.py &
+/home/dev/env/bin/python /home/dev/cymatic-rec/btn_listener.py

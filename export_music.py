@@ -2,9 +2,10 @@
 import subprocess
 import time
 from status_led import StatusLed
-import threading
 from db import MusicDatabase
-from config import LIB_DELETE_ON_EXPORT
+from config import LIB_DELETE_ON_EXPORT, LIB_PATH
+import os
+
 
 def mount_drive(drive):
     command = ['sudo', 'udisksctl', 'mount', '-b', drive]
@@ -19,25 +20,7 @@ def unmount_drive(drive):
     return result.stdout
 
 
-# def export_chunes(mount_path):
-#     create_dir_cmd = ['sudo', 'mkdir', '-p', f'{mount_path}/music']
-#     subprocess.run(create_dir_cmd, capture_output=True, text=True)
-#     print(mount_path)
-#     dry_run_cmd = ['sudo', 'rsync', '-rvn',
-#                    '/home/dev/crec/', f'{mount_path}/music']
-#     result = subprocess.run(
-#         dry_run_cmd, capture_output=True)
-#     files = result.stdout.splitlines()[1:-3]
-#     for file in files:
-#         line = file.decode('utf-8').strip()
-#         parts = line.strip().split('/')
-#         if len(parts) >= 3 and line.endswith('.flac'):
-#             song = parts[-1].replace('.flac', '')
-#             album = parts[-2]
-#             artist = parts[-3]
-#             print(f"{song} - {artist} - {album}")
-
-def export_chunes(mount_path, led, db):
+def export_songs(mount_path, led, db, delete=False):
     create_dir_cmd = ['sudo', 'mkdir', '-p', f'{mount_path}/music']
     subprocess.run(create_dir_cmd, capture_output=True, text=True)
     print(mount_path)
@@ -45,7 +28,7 @@ def export_chunes(mount_path, led, db):
     dry_run_cmd = ['sudo', 'rsync', '-rvn',
                    '/home/dev/crec/', f'{mount_path}/music/']
     real_cmd = ['sudo', 'rsync', '-rv',]
-    if LIB_DELETE_ON_EXPORT:
+    if LIB_DELETE_ON_EXPORT or delete:
         real_cmd.append('--remove-source-files')
     real_cmd.extend(['/home/dev/crec/', f'{mount_path}/music/'])
     result = subprocess.run(
@@ -92,19 +75,32 @@ def process_output_line(line, files, led, db: MusicDatabase):
         pass
 
 
-def sync_music(drive, led: StatusLed, ):
+def remove_empty_folders(path):
+    # given a path, deletes all subfolders that don't contain anything
+    # start at the leaves and work up (in case all leaves are deleted)
+    for root, dirs, files in os.walk(path, topdown=False):
+        for name in dirs:
+            full_path = os.path.join(root, name)
+            if not os.listdir(full_path) and '_' not in full_path:
+                os.rmdir(full_path)
+                print(f'Removed empty directory: {full_path}')
+
+
+def sync_music(drive, led: StatusLed, delete=False):
     db = MusicDatabase()
     led.set_sesh_status('Save', update=True)
     path = mount_drive(drive)
     if '/media/root/' in path:
         led.set_drive_status('Good', update=True)
-        export_chunes(path.strip(), led, db)
+        export_songs(path.strip(), led, db, delete)
         print(unmount_drive(drive))
+        remove_empty_folders(LIB_PATH)
         led.set_drive_status('Off')
         led.set_progress(-1)
         led.set_sesh_status('Good', update=True)
         time.sleep(1)
         led.set_sesh_status('Stop', update=True)
+        return
     else:
         led.set_drive_status('Error', update=True)
         time.sleep(1)

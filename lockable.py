@@ -1,6 +1,5 @@
 import time
 
-
 class LockableValue:
     def __init__(self, initial_value=None, verbose=False, timeout=15, repeat_lock=True):
         self.value = initial_value

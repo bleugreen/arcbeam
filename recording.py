@@ -184,13 +184,20 @@ class RecordingProcess:
 
     def trim_wav(self):
         if self.song_start_rtp is None:
-            song_start_ms = max(self.rec_start_ms+(self.buffer_len_ms),
-                                self.rec_end_ms - (self.song_data.length.value+self.buffer_len_ms))
+            if self.song_data.length.value is not None:
+                song_start_ms = max(self.rec_start_ms+(self.buffer_len_ms),
+                                    self.rec_end_ms - (self.song_data.length.value+self.buffer_len_ms))
+            else:
+                song_start_ms = self.rec_start_ms+self.buffer_len_ms
         else:
             song_start_ms = self.predict_ms(self.song_start_rtp)
         if self.song_end_rtp is None:
-            song_end_ms = min(
-                song_start_ms + self.song_data.length.value, self.rec_end_ms)
+            if self.song_data.length.value is not None:
+                song_end_ms = min(
+                    song_start_ms + self.song_data.length.value, self.rec_end_ms)
+            else:
+                song_end_ms = self.rec_end_ms
+
         else:
             song_end_ms = self.predict_ms(self.song_end_rtp)
 
@@ -225,7 +232,8 @@ class RecordingProcess:
         return self.ms_left() < self.buffer_len_ms and self.ms_length() > 20_000
 
     def should_stop(self):
-        return self.ms_left() <= -1*self.buffer_len_ms and self.ms_length() > self.song_data.length.value
+        min_len = self.song_data.length.value if self.song_data.length.value is not None else 20_000
+        return self.ms_left() <= -1*self.buffer_len_ms and self.ms_length() > min_len
 
     def ms_left(self):
         if self.song_end_rtp is None:

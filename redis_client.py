@@ -7,6 +7,9 @@ class RedisClient:
         self.redis = redis.Redis(host='localhost', port=6379, db=0)
         self.current_device_addr = self.redis.get('device').decode()
 
+    def publish(self, line, channel='crec'):
+        self.redis.publish(channel, line)
+
     def set_active(self, active):
         # Set the 'active' key to true or false
         self.redis.set('active', 'true' if active else 'false')

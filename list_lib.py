@@ -27,18 +27,18 @@ def list_flac_files(directory):
     return flac_files
 
 
-db = MusicDatabase()
-# Example usage
-flac_list = list_flac_files('/home/dev/crec')
-for flac in flac_list:
-    title, album, artist, metadata, rec_length = flac
-    genre = metadata.get('genre', 'None')
-    composer = metadata.get('genre', 'None')
-    print(title, album, artist, genre, composer, rec_length)
-    try:
-        song_id = db.add_song("None", title, artist, album, composer, genre, 0)
-        if song_id:
-            db.add_recording(song_id, rec_length)
-    except Exception as e:
-        print(e)
-        continue
+# db = MusicDatabase()
+# # Example usage
+# flac_list = list_flac_files('/home/dev/crec')
+# for flac in flac_list:
+#     title, album, artist, metadata, rec_length = flac
+#     genre = metadata.get('genre', 'None')
+#     composer = metadata.get('genre', 'None')
+#     print(title, album, artist, genre, composer, rec_length)
+#     try:
+#         song_id = db.add_song("None", title, artist, album, composer, genre, 0)
+#         if song_id:
+#             db.add_recording(song_id, rec_length)
+#     except Exception as e:
+#         print(e)
+#         continue
