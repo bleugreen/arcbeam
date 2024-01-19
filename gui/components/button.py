@@ -1,5 +1,5 @@
 class Button:
-    def __init__(self, x, y, width, height, onPress):
+    def __init__(self, x, y, width, height, onPress, duration=0.01):
         """
         Initialize a button with coordinates, dimensions, and an onPress callback.
 
@@ -14,6 +14,7 @@ class Button:
         self.width = width
         self.height = height
         self.onPress = onPress
+        self.duration = duration
 
     def draw(self, drawContext):
         """
@@ -36,13 +37,28 @@ class Button:
         return (self.x <= touch_x <= self.x + self.width and
                 self.y <= touch_y <= self.y + self.height)
 
-    def handle_touch(self, touch_x, touch_y):
+    def handle_touch(self, eventType, touch_event):
         """
-        Handle a touch event. Calls the onPress callback if the button is pressed.
+        Handle a touch event. Calls different methods based on the touch event type.
 
-        :param touch_x: The x-coordinate of the touch.
-        :param touch_y: The y-coordinate of the touch.
+        :param eventType: The type of touch event ('start', 'end', etc.).
+        :param touch_event: The TouchEvent object.
         """
-        if self.is_pressed(touch_x, touch_y):
-            print(f"Button received touch at ({touch_x}, {touch_y})")
-            self.onPress()
+        if eventType == 'start':
+            self.handle_start(touch_event)
+        elif eventType == 'end':
+            self.handle_end(touch_event)
+        # Add more conditions for other event types as needed
+
+    def handle_start(self, touch_event):
+        if self.is_pressed(touch_event.start_x, touch_event.start_y):
+            print(f"Button touch start at ({touch_event.start_x}, {touch_event.start_y})")
+            # Add logic for start touch here, e.g., highlighting the button
+
+    def handle_end(self, touch_event):
+        if self.is_pressed(touch_event.end_x, touch_event.end_y):
+            print(f"Button touch end at ({touch_event.end_x}, {touch_event.end_y})")
+            # Trigger the onPress action if touch ends within the button
+            if touch_event.duration >= self.duration:
+                self.onPress()
+            # Add additional logic for end touch here if needed

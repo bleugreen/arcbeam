@@ -1,6 +1,7 @@
+import time
 from typing import List, Optional
 from .stamp import TimeStamp
-import time
+
 SR = 44100
 THRESH_SEC = 2
 

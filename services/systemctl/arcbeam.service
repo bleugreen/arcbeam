@@ -1,0 +1,17 @@
+[Unit]
+Description=Arcbeam Runtime (shairplay, jackd, monitor, app)
+After=network.target
+
+[Service]
+ExecStart=/home/dev/cymatic-rec/jack_init.sh
+Environment="DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus"
+LimitMEMLOCK=infinity
+LimitRTPRIO=infinity
+WorkingDirectory=/home/dev/cymatic-rec/
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=dev
+
+[Install]
+WantedBy=multi-user.target

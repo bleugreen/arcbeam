@@ -1,7 +1,8 @@
-from eink import EInkDisplay
-from PIL import ImageDraw
-from livepage import LivePage
 import time
+from PIL import ImageDraw
+from .display import EInkDisplay
+from . import LivePage, Page
+
 
 class App:
     def __init__(self):
@@ -11,14 +12,14 @@ class App:
         self.display = EInkDisplay(self.handle_global_touch)
         self.drawContext = ImageDraw.Draw(self.display.image)
         self.pages = {}
-        self.active_page = None
+        self.active_page:Page = None
 
-    def draw_active_page(self):
+    def draw_active_page(self, force_refresh=False):
         """
         Pass the display and drawing context to the active page for drawing.
         """
         if self.active_page is not None:
-            self.active_page.draw(self.display, self.drawContext)
+            self.active_page.draw(self.display, self.drawContext, force_refresh=force_refresh)
 
     def add_page(self, name, page):
         """
@@ -37,9 +38,9 @@ class App:
         """
         if name in self.pages:
             self.active_page = self.pages[name]
-            self.display.clear()
+            # self.display.clear()
             self.active_page.activate()
-            self.draw_active_page()
+            self.draw_active_page(force_refresh=True)
         else:
             print(f"Page '{name}' not found")
 
@@ -51,27 +52,21 @@ class App:
         :param touch_event: The TouchEvent object.
         """
         if self.active_page is not None:
-            if eventType == 'start':
-                self.active_page.handle_touch(touch_event.start_x, touch_event.start_y)
-            else:
-                print(f"Unhandled touch event: {eventType}")
+            self.active_page.handle_touch(eventType, touch_event)
+        else:
+            print(f"Unhandled touch event: {eventType}")
 
-    def run(self, refresh_interval=5):
+    def run(self, refresh_interval=2):
         """
         Run the application with periodic refresh for LiveData pages.
 
         :param refresh_interval: The time interval (in seconds) for refreshing LiveData pages.
         """
-        try:
-            while True:
-                if isinstance(self.active_page, LivePage):
-                    print("Refreshing live page...")
-                    self.draw_active_page()
-                time.sleep(refresh_interval)
-        except KeyboardInterrupt:
-            # Handle any cleanup here if necessary before exiting
-            self.stop()
-            print("Application closed.")
+        while True:
+            if isinstance(self.active_page, LivePage):
+                self.draw_active_page()
+            time.sleep(refresh_interval)
+
 
     def stop(self):
         self.display.stop()

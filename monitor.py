@@ -1,16 +1,14 @@
 import os
-import time
 import subprocess
-import redis
-from redis_client import RedisClient
-import json
+import time
+from backend.redis_client import (RedisClient, bundle_message, ctl_message,
+                                  frame_message, prog_message, sesh_message)
 from time_mgmt import amt_ns_to_ms
 
 # Publish a message
 channel = 'crec'
 bundle = {}
 in_bundle = False
-
 
 def monitor_metadata_pipe(pipe_path, redis_client):
     global bundle, in_bundle
@@ -28,57 +26,22 @@ def monitor_metadata_pipe(pipe_path, redis_client):
             # Wait for some time before checking again if the pipe exists
             time.sleep(5)
 
-
-def sesh_message(type: str, value):
-    message_dict = {
-        'type': type,
-        'value': value
-    }
-    return json.dumps(message_dict)
-
-
-def bundle_message(bundle: dict):
-    message_dict = {
-        'type': 'bundle',
-        **bundle
-    }
-    return json.dumps(message_dict)
-
-
-def frame_message(rtp: int, ms):
-    message_dict = {
-        'type': 'frame',
-        'rtp': rtp,
-        'ms': ms
-    }
-    return json.dumps(message_dict)
-
-
-def prog_message(start: int, curr: int, end: int):
-    message_dict = {
-        'type': 'progress',
-        'start': start,
-        'curr': curr,
-        'end': end
-    }
-    return json.dumps(message_dict)
-
-
-def ctl_message(cmd):
-    message_dict = {
-        'type': 'control',
-        'cmd': cmd,
-    }
-    return json.dumps(message_dict)
-
-
 def process_metadata_line(line, redis_client: RedisClient):
     global bundle, in_bundle
     if line.startswith('XXX'):
         print(f'ERROR: {line}')
         return bundle, in_bundle
 
-    if 'Metadata bundle' in line:
+    if 'frame/time:' in line:
+        rtp = int(line.split('"')[1].split('/')[0])
+        ss_ns = int(line.split('"')[1].split('/')[1])
+        ss_ms = amt_ns_to_ms(ss_ns)
+        redis_client.publish(frame_message(rtp, ss_ms))
+    elif 'Progress String' in line:
+        start, curr, end = map(
+            int, line.split('"')[1].split('/'))
+        redis_client.publish(prog_message(start, curr, end))
+    elif 'Metadata bundle' in line:
         rtp_id = line.split('"')[1]
         if 'start' in line:
             bundle = {'rtp': rtp_id}
@@ -96,38 +59,32 @@ def process_metadata_line(line, redis_client: RedisClient):
             bundle[key] = line.split(':')[1].strip('. \n')
     elif 'Active State' in line:
         if 'Enter' in line:
-            redis_client.set_active(True)
+            redis_client.set_device_status_field('active', True)
             redis_client.publish(sesh_message('active', True))
         elif 'Exit' in line:
-            redis_client.set_active(False)
+            redis_client.set_device_status_field('active', False)
             redis_client.publish(sesh_message('active', False))
     elif 'Play Session' in line:
         if 'Begin' in line:
-            redis_client.set_playing(True)
+            redis_client.set_device_status_field('playing', True)
             redis_client.publish(sesh_message('playing', True))
         elif 'End' in line:
-            redis_client.set_playing(False)
+            redis_client.set_device_status_field('playing', False)
             redis_client.publish(sesh_message('playing', False))
     elif 'The AirPlay client at' in line:
         addr = line.split('"')[1]
         if 'has connected' in line:
-            redis_client.set_device_addr(addr)
+            redis_client.set_device_detail_field('addr', addr)
+            redis_client.set_device_status_field('connected', True)
             redis_client.publish(sesh_message('conn', True))
         elif 'has disconnected' in line:
-            redis_client.set_device_addr(None)
+            redis_client.set_device_detail_field('addr', None)
+            redis_client.set_device_status_field('connected', False)
             redis_client.publish(sesh_message('conn', False))
     elif 'Stream type' in line:
         st = line.split('"')[1]
         redis_client.publish(sesh_message('streamtype', st))
-    elif 'frame/time:' in line:
-        rtp = int(line.split('"')[1].split('/')[0])
-        ss_ns = int(line.split('"')[1].split('/')[1])
-        ss_ms = amt_ns_to_ms(ss_ns)
-        redis_client.publish(frame_message(rtp, ss_ms))
-    elif 'Progress String' in line:
-        start, curr, end = map(
-            int, line.split('"')[1].split('/'))
-        redis_client.publish(prog_message(start, curr, end))
+
     elif line.startswith('Pause'):
         redis_client.publish(ctl_message('Pause'))
     elif line.startswith('Resume'):

@@ -4,16 +4,14 @@ import subprocess
 import time
 from status_led import StatusLed
 import threading
-from export_music import sync_music
-from redis_client import RedisClient
+from transfer.export_music import sync_music
+from backend.redis_client import RedisClient
 from datetime import datetime
 from config import LIB_PATH, REC_NICE, REC_BUFFER, CHANNELS, SAMPLE_RATE, REC_FORMAT
 import os
 # re-initialize saved status
 r = RedisClient()
-r.set_active(False)
-r.set_playing(False)
-r.set_device_addr('none')
+r.reset()
 del r
 
 led = StatusLed()
@@ -103,7 +101,7 @@ def run_sync():
             led.set_drive_status('Off', update=True)
             return
         else:
-            sync_music(drive_to_mount, led, delete=red_held)
+            sync_music(drive_to_mount, delete=red_held)
 
 
 def stop_clip():

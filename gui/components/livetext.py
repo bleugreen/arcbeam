@@ -1,34 +1,31 @@
-from PIL import ImageFont, ImageDraw, Image
+from PIL import ImageFont
+from . import LiveComponent
 
-
-DEFAULT_FONT_PATH = "/usr/share/fonts/truetype/arcade/ARCADE_R.TTF"
+DEFAULT_FONT_PATH = "../fonts/ARCADE_R.TTF"
 DEFAULT_FONT_SIZE = 18
-
 BG_MARGIN = 5
 
-class LiveTextBox:
-    def __init__(self, x, y, width, height, redis_client, hash_key, field, font_path=DEFAULT_FONT_PATH, font_size=DEFAULT_FONT_SIZE, default_text="No Data"):
+class LiveTextBox(LiveComponent):
+    def __init__(self, x, y, width, height, update_function, function_args=(), font_path=DEFAULT_FONT_PATH, font_size=DEFAULT_FONT_SIZE, default_text=""):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
-        self.redis_client = redis_client
-        self.hash_key = hash_key
-        self.field = field
+        self.update_function = update_function
+        self.function_args = function_args
         self.font = ImageFont.truetype(font_path, font_size)
         self.default_text = default_text
         self.text = ""
+        self.needs_update = False
 
     def update_data(self):
-        # Fetch data from Redis
-        new_data = self.redis_client.hget(self.hash_key, self.field)
-        new_text = new_data.decode('utf-8') if new_data else self.default_text
+        # Fetch data using the provided function and arguments
+        new_data = self.update_function(*self.function_args)
+        new_text = str(new_data) if new_data is not None else self.default_text
 
         if new_text != self.text:
             self.text = new_text
             self.needs_update = True
-
-        print(f'Updated text to {self.text} (needs update: {self.needs_update})')
 
     def draw(self, drawContext):
         # Abbreviate text if it's too long and reduce font size to MIN_FONT_SIZE if necessary
@@ -40,14 +37,14 @@ class LiveTextBox:
         while text_width > self.width - (2 * BG_MARGIN) and font.size > MIN_FONT_SIZE:
             font = ImageFont.truetype(font.path, max(font.size - 1, MIN_FONT_SIZE))
             text_width = font.getlength(text)
-            print(f"Reducing font size to {font.size}")
         if text_width > self.width - (2 * BG_MARGIN):
             while font.getlength(text + ABBREVIATION_SUFFIX) >= self.width - (2 * BG_MARGIN):
                 text = text[:-1]
             text += ABBREVIATION_SUFFIX
-        print(f"Drawing text: {text}")
         # Draw a white rectangle
-        drawContext.rectangle((self.x, self.y, self.x + self.width, self.y + self.height), fill=255)
+        drawContext.rectangle((self.x, self.y, self.x + self.width, self.y + self.height), fill=0)
         # Draw the text
+
         x_offset = (self.width - font.getlength(text) - (2 * BG_MARGIN)) // 2
-        drawContext.text((self.x + x_offset + BG_MARGIN, self.y + BG_MARGIN), text, font=font, fill=0)
+        y_offset = (self.height - font.size - (2 * BG_MARGIN)) // 2
+        drawContext.text((self.x + x_offset + BG_MARGIN, self.y + y_offset + BG_MARGIN), text, font=font, fill=255)

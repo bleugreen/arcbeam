@@ -89,10 +89,11 @@ class StatusLed:
         colors = self._get()
         for idx, color in enumerate(colors):
             leds[idx] = color
-        leds.show()
+        # leds.show()
 
     def update(self):
-        self.r.publish('led', 'update')
+        pass
+        # self.r.publish('led', 'update')
 
     def turn_off(self, update=True):
         self._set_all((0, 0, 0))

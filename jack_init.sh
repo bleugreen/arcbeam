@@ -34,9 +34,8 @@ read_config_value() {
 
 
 # Kill existing jackd and shairport-sync processes
-kill_process "rec/main.py"
-kill_process "btn_test.py"
-kill_process "status_led.py"
+kill_process "main.py"
+kill_process "recorder.py"
 kill_process "monitor.py"
 kill_process "shairport-sync"
 kill_process "alsa_out"
@@ -82,8 +81,5 @@ jack_connect shairport-sync:out_L Loopback5:playback_1
 jack_connect shairport-sync:out_R Loopback5:playback_2
 
 echo "JACK session set up complete. Starting Listener"
-/home/dev/env/bin/python /home/dev/cymatic-rec/startup.py
 
-/home/dev/env/bin/python /home/dev/cymatic-rec/monitor.py &
-/home/dev/env/bin/python /home/dev/cymatic-rec/status_led.py &
-/home/dev/env/bin/python /home/dev/cymatic-rec/btn_listener.py
+/home/dev/env/bin/python /home/dev/cymatic-rec/monitor.py

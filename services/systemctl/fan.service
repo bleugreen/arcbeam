@@ -1,0 +1,11 @@
+[Unit]
+Description=Fan Speed Control Service
+
+[Service]
+ExecStart=/home/dev/env/bin/python3 /home/dev/cymatic-rec/services/fan.py
+WorkingDirectory=/home/dev/cymatic-rec
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
