@@ -6,9 +6,11 @@ import time
 import redis
 import json
 import os
-
+from backend import RedisClient
+from config import LIB_PATH
+from songqueue import SongQueue
 class AudioPlayer:
-    def __init__(self, client_name="PyJackAudioPlayer", max_channels=2, base_directory='/home/dev/crec'):
+    def __init__(self, client_name="ArcbeamPlayer", max_channels=2, base_directory=LIB_PATH):
         self.client_name = client_name
         self.max_channels = max_channels
         self.base_directory = base_directory
@@ -25,6 +27,7 @@ class AudioPlayer:
         self.current_album = None
         self.sample_rate = None
         self.playback_thread = None
+        self.queue = SongQueue(self.base_directory)
 
 
         @self.client.set_process_callback
@@ -55,6 +58,7 @@ class AudioPlayer:
 
         print("Playback finished")
         self.client.deactivate()
+        self.play_next_in_queue()
 
     def process(self, frames):
         if self.is_paused or self.playback_finished:
@@ -84,23 +88,40 @@ class AudioPlayer:
 
     def stop(self):
         self.playback_finished = True
+        self.is_paused = False
+        self.current_position = 0
         if self.playback_thread is not None:
             self.playback_thread.join()
+        self.playback_thread = None
         self.update_player_state()
 
     def run(self, channel='player'):
         self.redis_channel = channel
-        self.redis_client = redis.Redis()
-        self.pubsub = self.redis_client.pubsub()
+        self.redis_client = RedisClient()
+        self.pubsub = self.redis_client.redis.pubsub()
         self.pubsub.subscribe(self.redis_channel)
         self.subscriber_thread = threading.Thread(target=self.listen_to_redis)
         self.subscriber_thread.start()
+
+    def play_next_in_queue(self):
+        next_song = self.queue.get_next_song()
+        if next_song:
+            self.queue.set_current_song(next_song)
+            path_parts = next_song.split(os.sep)
+            self.current_artist = path_parts[-3]
+            self.current_album = path_parts[-2]
+            self.current_title = path_parts[-1].rsplit('.', 1)[0]
+            self.playback_finished = False
+            self.current_position = 0
+            self.is_paused = False
+            self.update_player_state()
+            self.play_audio(next_song)
 
 
     def listen_to_redis(self):
         for message in self.pubsub.listen():
             if message['type'] == 'message':
-                data = json.loads(message['data'].decode('utf-8'))
+                data = json.loads(message['data'])
                 self.handle_redis_command(data)
 
     def handle_redis_command(self, data):
@@ -109,8 +130,8 @@ class AudioPlayer:
             file_path = self.construct_file_path(data)
             if file_path:
                 # Stop current playback if any
+                self.queue.set_current_song(file_path)
                 self.stop()
-                # Start playback in a new thread
                 self.playback_thread = threading.Thread(target=self.play_audio, args=(file_path,))
                 self.playback_thread.start()
         elif command == 'pause':
@@ -119,6 +140,8 @@ class AudioPlayer:
             self.resume()
         elif command == 'stop':
             self.stop()
+        elif command == 'next':
+            self.playback_finished = True
 
     def construct_file_path(self, data):
         artist = data.get('artist')
@@ -135,29 +158,26 @@ class AudioPlayer:
         return None
 
     def update_player_state(self):
+        progress = 0 if not self.get_track_length() else self.get_time_elapsed() / self.get_track_length()
         state = {
             "title": str(self.current_title),
             "artist": str(self.current_artist),
             "album": str(self.current_album),
             "time_elapsed": str(self.get_time_elapsed()),
             "length": str(self.get_track_length()),
-            "is_paused": str(self.is_paused)
+            "is_paused": str(self.is_paused),
+            "progress": progress
         }
-        self.redis_client.hset("player_state", mapping=state)
+        self.redis_client.set_current_song(state, page='player')
 
     def get_time_elapsed(self):
-        # Calculate and return the time elapsed in seconds
-        # Note: This depends on how you're tracking playback time
         return self.current_position / self.client.samplerate
 
     def get_track_length(self):
-        # Calculate and return the total track length in seconds
-        # Note: This depends on the total number of frames and sample rate
         if self.data is not None:
             return len(self.data) / self.client.samplerate
         return 0
 
-# Example Usage
 if __name__ == "__main__":
     player = AudioPlayer()
     player.run()

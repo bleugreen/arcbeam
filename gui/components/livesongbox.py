@@ -4,11 +4,12 @@ from . import LiveComponent
 
 DEFAULT_FONT_PATH = "../fonts/ARCADE_R.TTF"
 DEFAULT_FONT_SIZE = 18
-
 BG_MARGIN = 5
 MIN_FONT_SIZE = 8
+
+
 class LiveSongBox(LiveComponent):
-    def __init__(self, x, y, width, height,  redis:RedisClient=None, margin=4, font_path=DEFAULT_FONT_PATH, font_size=DEFAULT_FONT_SIZE, default_text=""):
+    def __init__(self, x, y, width, height,  redis:RedisClient=None, margin=4, font_path=DEFAULT_FONT_PATH, font_size=DEFAULT_FONT_SIZE, default_text="", page='rec'):
         self.x = x
         self.y = y
         self.width = width
@@ -20,9 +21,10 @@ class LiveSongBox(LiveComponent):
         self.default_text = default_text
         self.text = {"title": "", 'artist': '', 'album': ''}
         self.needs_update = False
+        self.page = page
 
     def update_field(self, field):
-        new_data = self.redis.get_current_song_field(field)
+        new_data = self.redis.get_current_song_field(field, page=self.page)
         new_text = str(new_data) if new_data is not None else self.default_text
         new_text = new_text.split(' (')[0]
         if new_text != self.text[field]:

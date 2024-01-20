@@ -46,7 +46,7 @@ class RedisClient:
     Schema:
     - Device Status (`device:status`): Hash with 'connected', 'active', 'playing' (boolean as 1/0).
     - Device Details (`device:details`): Hash with 'addr', 'name', 'id', 'model', 'mac_addr', expires in 12 hours.
-    - Current Song (`song:current`): Hash with 'title', 'artist', 'album', 'elapsed', 'length', 'rec_status', 'db_status'.
+    - Current Song (`song:[page]`): Hash with 'title', 'artist', 'album', 'elapsed', 'length', 'rec_status', 'db_status'.
 
     Offers methods for setting/getting these fields individually or in bulk, handling boolean and string data types.
     """
@@ -90,20 +90,20 @@ class RedisClient:
     def get_device_detail_field(self, field):
         return self.redis.hget("device:details", field)
 
-    def set_current_song(self, song_data):
+    def set_current_song(self, song_data, page='rec'):
         """ Set multiple current song fields. """
         song_data = {k: "None" if v is None else v for k, v in song_data.items()}
-        self.redis.hset("song:current", mapping=song_data)
+        self.redis.hset(f"song:{page}", mapping=song_data)
 
-    def set_current_song_field(self, field, value):
+    def set_current_song_field(self, field, value, page='rec'):
         """ Set a single current song field. """
-        self.redis.hset("song:current", field, value)
+        self.redis.hset(f"song:{page}", field, value)
 
-    def get_current_song(self):
-        return self.redis.hgetall("song:current")
+    def get_current_song(self, page='rec'):
+        return self.redis.hgetall(f"song:{page}")
 
-    def get_current_song_field(self, field):
-        return self.redis.hget("song:current", field)
+    def get_current_song_field(self, field, page='rec'):
+        return self.redis.hget(f"song:{page}", field)
 
     def set_rec_time_status(self, device, status):
         self.redis.set(f"rec:{device}:time", status)
@@ -120,10 +120,10 @@ class RedisClient:
 
     def reset_song(self):
         """ Clears all stored data related to the current song. """
-        self.redis.delete("song:current")
+        self.redis.delete("song:rec", "song:play")
         self.redis.delete("rec:1:time", "rec:1:db", "rec:3:time", "rec:3:db")
 
     def reset(self):
         """ Clears all stored data related to the device and current song. """
-        self.redis.delete("device:status", "device:details", "song:current")
+        self.redis.delete("device:status", "device:details", "song:rec", "song:play")
         self.redis.delete("rec:1:time", "rec:1:db", "rec:3:time", "rec:3:db")
