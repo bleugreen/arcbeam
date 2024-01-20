@@ -19,3 +19,6 @@ audio:
   samplerate: 44100
   channels: 2
   period: 128  # Num frames per packet (i think)
+
+system:
+  python_path: /home/dev/env/bin/python

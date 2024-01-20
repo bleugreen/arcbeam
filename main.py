@@ -4,7 +4,7 @@ import os
 from backend import RedisClient
 from gui import (App, Button, LivePage, LiveSongBox, Menu, ProgressBar,
                  RecStatusBar)
-
+from config import PYTHON_PATH
 process = None
 running = False
 
@@ -17,7 +17,7 @@ def record_callback():
         running = True
         redis_client.reset_song()
         project_root = os.path.dirname(os.path.abspath(__file__))
-        command = ['/home/dev/env/bin/python', '-m', 'recording.recorder']
+        command = [PYTHON_PATH, '-m', 'recording.recorder']
         process = subprocess.Popen(command, cwd=project_root)
     app.set_active_page("record")
 

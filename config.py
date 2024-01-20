@@ -24,3 +24,5 @@ AUDIO_DEVICE = config['audio']['device']
 SAMPLE_RATE = config['audio']['samplerate']
 CHANNELS = config['audio']['channels']
 PACKETS = config['audio']['channels']
+
+PYTHON_PATH = config['system']['python_path']
