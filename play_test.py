@@ -8,27 +8,27 @@ import os
 import tempfile
 import subprocess
 import time
+
+from config import LIB_PATH
 # Constants
-client_name = "PyJackAudioPlayer"
+client_name = "ArcbeamPlayer"
 redis_channel = 'player'
-base_directory = '/home/dev/crec'  # Base directory for music files
+base_directory = LIB_PATH  # Base directory for music files
 
 # Initialize JACK client
 max_channels = 2  # Set to the maximum number of channels you expect to handle
-
-# Initialize JACK client
 client = jack.Client(client_name)
 outports = [client.outports.register(f"{client_name}_out_{i}") for i in range(max_channels)]
-# Attempt to register new ports
 target_ports = client.get_ports(is_physical=True, is_input=True, is_audio=True)
-# Check if the number of target ports is sufficient
+
 is_paused = False
 current_position = 0
-
 playback_finished = False
 # Function to play audio file
 def play_audio(file_path):
-    global outports, playback_finished
+    global outports, playback_finished, current_position, is_paused
+    current_position = 0
+    is_paused = False
     playback_finished = False
 
     with sf.SoundFile(file_path) as sf_file:
