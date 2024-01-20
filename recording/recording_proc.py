@@ -6,6 +6,7 @@ import sys
 import time
 import uuid
 import wave
+import re
 from pydub import AudioSegment
 from backend import MusicDatabase, RedisClient
 from .metadata_tagger import MetadataTagger
@@ -15,6 +16,19 @@ from time_mgmt import (TimeSegment, amt_ms_to_rtp, amt_rtp_to_ms,
 from config import (CHANNELS, LIB_FILETYPE, LIB_PATH, REC_BUFFER, REC_FILETYPE,
                     REC_FOLDER_RAW, REC_FOLDER_TRIM, REC_FORMAT, REC_NICE,
                     REC_OVERLAP, SAMPLE_RATE)
+
+def sanitize_for_exfat(name):
+    # Define a regular expression pattern for disallowed characters
+    # Includes control characters (U+0000 to U+001F), and specific symbols
+    pattern = r'[\x00-\x1F"*/:<>?\\|]'
+
+    # Replace any occurrence of the disallowed characters with an underscore
+    sanitized_name = re.sub(pattern, '_', name)
+
+    # Additional rule: Remove leading and trailing spaces
+    sanitized_name = sanitized_name.strip()
+
+    return sanitized_name
 
 class RecordingProcess:
     def __init__(self, library_path=LIB_PATH, filetype=LIB_FILETYPE, stream_type='Realtime', buffer_len=REC_OVERLAP, led = None, db: MusicDatabase = None, redis:RedisClient=None):
@@ -275,9 +289,9 @@ class RecordingProcess:
             self.delete_temp_files()
             return
         target_dir = os.path.join(
-            self.library_path, self.song_data.artist.value, self.song_data.album.value)
+            self.library_path, sanitize_for_exfat(self.song_data.artist.value), sanitize_for_exfat(self.song_data.album.value))
         self.song_filepath = os.path.join(
-            target_dir, f"{self.song_data.title.value}.{self.filetype}")
+            target_dir, f"{sanitize_for_exfat(self.song_data.title.value)}.{self.filetype}")
 
         if os.path.exists(self.song_filepath):
             print(f"File {self.song_filepath} already exists.")

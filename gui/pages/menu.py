@@ -19,7 +19,7 @@ class Menu(Page):
         if not self.has_drawn:
             image = Image.open(self.img_path)
             image = image.convert("L")
-            if self.img_path == "gui/images/crecmenu2.png":
+            if self.img_path == "gui/images/menu.png":
                 image = ImageOps.invert(image)
             display.image.paste(image, (0, 0))
 

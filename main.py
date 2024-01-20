@@ -49,7 +49,7 @@ title_page = Menu("gui/images/title.png")
 enter_btn = Button(0, 0, 296, 128, title_callback)
 title_page.add_elements(enter_btn)
 
-menu_page = Menu("gui/images/menu.png")  # Replace with your image path
+menu_page = Menu("gui/images/menu.png")
 record_btn = Button(0, 0, 82, 128, record_callback)
 play_btn = Button(82, 0, 59, 128, play_callback)
 blend_btn = Button(141, 0, 67, 128, blend_callback)

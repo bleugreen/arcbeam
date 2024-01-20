@@ -5,18 +5,7 @@ from backend import MusicDatabase
 from .lockable import LockableValue
 
 
-def sanitize_for_exfat(name):
-    # Define a regular expression pattern for disallowed characters
-    # Includes control characters (U+0000 to U+001F), and specific symbols
-    pattern = r'[\x00-\x1F"*/:<>?\\|]'
 
-    # Replace any occurrence of the disallowed characters with an underscore
-    sanitized_name = re.sub(pattern, '_', name)
-
-    # Additional rule: Remove leading and trailing spaces
-    sanitized_name = sanitized_name.strip()
-
-    return sanitized_name
 
 @dataclass
 class SongData:
@@ -85,17 +74,17 @@ class SongData:
             self.hex_id.update(bundle.get('Persistent ID'))
             print(f'Update hex id = {self.hex_id}')
         if bundle.get('Album Name'):
-            self.album.update(sanitize_for_exfat(bundle.get('Album Name')))
+            self.album.update(bundle.get('Album Name'))
             print(f'Update album = {self.album}')
         if bundle.get('Artist'):
-            self.artist.update(sanitize_for_exfat(bundle.get('Artist')))
+            self.artist.update(bundle.get('Artist'))
             print(f'Update artist = {self.artist}')
         if bundle.get('Composer'):
             self.composer.update(bundle.get('Composer'))
         if bundle.get('Genre'):
             self.genre.update(bundle.get('Genre'))
         if bundle.get('Title'):
-            self.title.update(sanitize_for_exfat(bundle.get('Title')))
+            self.title.update(bundle.get('Title'))
             print(f'Update title = {self.title}')
         if bundle.get('Track length'):
 
