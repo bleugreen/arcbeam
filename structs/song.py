@@ -2,7 +2,7 @@ import re
 import time
 from dataclasses import dataclass, replace
 from backend import MusicDatabase
-from structs import LockableValue
+from .lockable import LockableValue
 
 
 def sanitize_for_exfat(name):

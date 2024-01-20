@@ -8,7 +8,7 @@ import uuid
 import wave
 from pydub import AudioSegment
 from backend import MusicDatabase, RedisClient
-from recording import MetadataTagger
+from .metadata_tagger import MetadataTagger
 from structs import SongData
 from time_mgmt import (TimeSegment, amt_ms_to_rtp, amt_rtp_to_ms,
                        current_time_ms)

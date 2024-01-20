@@ -4,9 +4,11 @@ import sys
 import time
 import redis
 from backend import MusicDatabase, RedisClient
-from config import LIB_FILETYPE, LIB_PATH
-from recording import RecordingProcess, clear_temp_files
 from structs import AirplayDevice
+from .recording_proc import RecordingProcess
+from .util import clear_temp_files
+from config import LIB_FILETYPE, LIB_PATH
+
 
 class AirplayRecorder:
     def __init__(self):

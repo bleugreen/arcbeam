@@ -36,11 +36,12 @@ class App:
 
         :param name: The name of the page to set as active.
         """
-        if name in self.pages:
+        if name in self.pages and self.pages[name] is not self.active_page:
             self.active_page = self.pages[name]
-            # self.display.clear()
             self.active_page.activate()
             self.draw_active_page(force_refresh=True)
+        elif name in self.pages:
+            print(f"Page '{name}' is already active")
         else:
             print(f"Page '{name}' not found")
 
