@@ -22,8 +22,6 @@ class TimeSegment:
         If the rtp difference exceeds the threshold, end the segment and return False.
         """
         frame_ms = ms
-        # if self.stream_type == 'Buffered':
-        #     frame_ms = ms+(self.buffer_len*1000)
         new_stamp = TimeStamp.create(rtp, frame_ms)
 
         if self.timestamps:

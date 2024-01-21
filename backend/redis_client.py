@@ -120,7 +120,7 @@ class RedisClient:
 
     def reset_song(self):
         """ Clears all stored data related to the current song. """
-        self.redis.delete("song:rec", "song:play")
+        self.redis.delete("song:rec", "song:player")
         self.redis.delete("rec:1:time", "rec:1:db", "rec:3:time", "rec:3:db")
 
     def reset(self):

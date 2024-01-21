@@ -94,11 +94,9 @@ class EInkDisplay:
 
     def handle_touch_start(self, start_x, start_y):
         logging.info(f"Touch start event detected at ({start_x}, {start_y})")
-        # Add callback for touch start here
 
     def handle_touch_end(self, touch_event: TouchEvent):
         logging.info(f"Touch end event detected from ({touch_event.start_x}, {touch_event.start_y}) to ({touch_event.end_x}, {touch_event.end_y}) Duration: {touch_event.duration}")
-        # Add callback for touch end here
 
     def handle_touch_event(eventType, touch_event):
         logging.info(f"{eventType} :: {touch_event})")
@@ -143,9 +141,6 @@ class EInkDisplay:
         self.has_drawn = False
 
     def stop(self):
-        # self.image.paste(Image.new('1', (self.width, self.height), 255))
-        # self.draw(partial=False, static=True)
-        # time.sleep(1)
         self.flag_t = 0
         self.epd.sleep()
         time.sleep(2)

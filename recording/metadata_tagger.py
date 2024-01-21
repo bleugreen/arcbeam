@@ -34,7 +34,6 @@ class MetadataTagger:
             '.mp3': MP3,
             '.ogg': OggVorbis,
             '.m4a': EasyMP4,
-            # Add other file types as needed...
         }
         file_ext = os.path.splitext(filepath)[1].lower()
         return file_loader.get(file_ext, lambda: None)(filepath)
@@ -50,7 +49,6 @@ class MetadataTagger:
             MetadataTagger._tag_base(audio, song_data)
         elif isinstance(audio, OggVorbis):
             MetadataTagger._tag_base(audio, song_data)
-        # Add more conditions for other file types if necessary
 
     @staticmethod
     def _tag_mp3(audio, song_data):

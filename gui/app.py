@@ -1,7 +1,7 @@
 import time
 from PIL import ImageDraw
 from .display import EInkDisplay
-from . import LivePage, Page
+from . import LivePage, Page, Menu
 
 
 class App:
@@ -30,7 +30,7 @@ class App:
         """
         self.pages[name] = page
 
-    def set_active_page(self, name):
+    def set_active_page(self, name, force_refresh=False):
         """
         Set the active page to be displayed.
 
@@ -38,8 +38,13 @@ class App:
         """
         if name in self.pages and self.pages[name] is not self.active_page:
             self.active_page = self.pages[name]
+            self.drawContext.rectangle((0, 0, self.display.width, self.display.height), fill=0)
+            # self.display.draw(partial=False, static=False)
+            # time.sleep(0.75)
             self.active_page.activate()
-            self.draw_active_page(force_refresh=True)
+            if force_refresh:
+                self.draw_active_page(force_refresh=True)
+            # self.draw_active_page(force_refresh=True)
         elif name in self.pages:
             print(f"Page '{name}' is already active")
         else:
@@ -57,7 +62,7 @@ class App:
         else:
             print(f"Unhandled touch event: {eventType}")
 
-    def run(self, refresh_interval=2):
+    def run(self, refresh_interval=1):
         """
         Run the application with periodic refresh for LiveData pages.
 
@@ -66,6 +71,9 @@ class App:
         while True:
             if isinstance(self.active_page, LivePage):
                 self.draw_active_page()
+            elif isinstance(self.active_page, Menu):
+                if not self.active_page.has_drawn:
+                    self.draw_active_page()
             time.sleep(refresh_interval)
 
 

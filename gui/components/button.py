@@ -24,7 +24,6 @@ class Button:
         """
         # Draw the button rectangle (outline or filled as needed)
         drawContext.rectangle((self.x, self.y, self.x + self.width, self.y + self.height), outline=0, fill=None)
-        # Additional drawing code (like text) can be added here
 
     def is_pressed(self, touch_x, touch_y):
         """
@@ -48,12 +47,10 @@ class Button:
             self.handle_start(touch_event)
         elif eventType == 'end':
             self.handle_end(touch_event)
-        # Add more conditions for other event types as needed
 
     def handle_start(self, touch_event):
         if self.is_pressed(touch_event.start_x, touch_event.start_y):
             print(f"Button touch start at ({touch_event.start_x}, {touch_event.start_y})")
-            # Add logic for start touch here, e.g., highlighting the button
 
     def handle_end(self, touch_event):
         if self.is_pressed(touch_event.end_x, touch_event.end_y):
@@ -61,4 +58,3 @@ class Button:
             # Trigger the onPress action if touch ends within the button
             if touch_event.duration >= self.duration:
                 self.onPress()
-            # Add additional logic for end touch here if needed

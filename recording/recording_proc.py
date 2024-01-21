@@ -170,10 +170,15 @@ class RecordingProcess:
             #     print(
             #         f'{self.song_data.title} -- ignoring prog, hasnt started (i hope)')
             #     # return
-            rtp_since_start = self.segments[-1].get_last().rtp - start
+            last_stamp = self.segments[-1].get_last()
+            if last_stamp is None:
+                rtp_since_start = 0
+            else:
+                rtp_since_start = self.segments[-1].get_last().rtp - start
+
             ms_since_prog_start = amt_rtp_to_ms(rtp_since_start)
             ms_since_rec_start = current_time_ms() - self.rec_start_ms
-            if ms_since_prog_start > 10000 and ms_since_rec_start < 10000:
+            if abs(ms_since_prog_start) > 10000 and ms_since_rec_start < 10000:
                 print('prog rtp is too far in the past, ignoring')
                 return
             self.song_start_rtp = start

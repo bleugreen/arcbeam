@@ -138,7 +138,6 @@ class AirplayRecorder:
                 print('no recordings! starting one')
                 self.start_next_recording()
 
-            # To avoid busy waiting; adjust the sleep time as needed
             self.update_redis_status()
 
         self.cleanup()

@@ -3,7 +3,6 @@ import soundfile as sf
 import numpy as np
 import threading
 import time
-import redis
 import json
 import os
 from backend import RedisClient
@@ -147,6 +146,7 @@ class AudioPlayer:
         artist = data.get('artist')
         album = data.get('album')
         title = data.get('title')
+        print(f"PLAYER GOT = Artist: {artist}, Album: {album}, Title: {title}")
         for ext in ['flac', 'wav', 'mp3', 'ogg']:
             file_path = os.path.join(self.base_directory, artist, album, f"{title}.{ext}")
             if os.path.exists(file_path):
