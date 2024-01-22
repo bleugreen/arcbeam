@@ -111,7 +111,9 @@ class RedisClient:
     def get_browse(self, field):
         """ Set a single current song field. """
         return self.redis.hget(f"browser", field)
-
+    def reset_browse(self):
+        """ Set a single current song field. """
+        self.redis.delete(f"browser")
 
 
     def set_rec_time_status(self, device, status):

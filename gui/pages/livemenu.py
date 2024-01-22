@@ -15,16 +15,7 @@ class LiveMenu(Page):
 
     def draw(self, display, drawContext, force_refresh=False):
         # Draw the static image if it has not been drawn yet
-        print(f"Drawing LiveMenu: has_drawn={self.has_drawn}" )
-        if not self.has_drawn:
-            print("Drawing static image", self.img_path)
-            image = Image.open(self.img_path)
-            image = image.convert("L")
-            if self.img_path == "gui/images/menu.png":
-                image = ImageOps.invert(image)
-            display.image.paste(image, (0, 0))
-            display.draw(partial=False , static=False)
-            self.has_drawn = True
+
 
         # Now handle the dynamic parts as in LivePage
         current_time = time.time()
@@ -32,10 +23,18 @@ class LiveMenu(Page):
         needs_update = False
         text_update = False
 
+        if not self.has_drawn:
+            image = Image.open(self.img_path)
+            image = image.convert("L")
+            if self.img_path == "gui/images/menu.png":
+                image = ImageOps.invert(image)
+            display.image.paste(image, (0, 0))
+
+
         for element in self.elements:
             if isinstance(element, LiveComponent):
                 element.update_data()
-                if element.needs_update:
+                if element.needs_update or not self.has_drawn:
                     needs_update = True
                     element.draw(drawContext)
                     if isinstance(element, LiveTextBox):
@@ -46,8 +45,13 @@ class LiveMenu(Page):
                     element.draw(drawContext)
 
         # Full refresh is needed if it's due and there's a text update
-
-        if needs_update:
+        if not self.has_drawn:
+            display.draw(partial=True , static=False)
+            self.has_drawn = True
+            for element in self.elements:
+                element.has_drawn = True
+                element.needs_update = False
+        elif needs_update:
             print(f'PARTIAL ::: Due: {full_refresh_due}, Text: {text_update}, force_refresh: {force_refresh}, timesincelast:{ current_time - self.last_full_refresh}')
             display.draw(partial=True, static=False)  # Partial refresh
             for element in self.elements:

@@ -3,8 +3,8 @@ from .live import LiveComponent
 
 FONT = "/home/dev/cymatic-rec/gui/fonts/ARCADE_R.TTF"
 MIN_FONT_SIZE = 14
-class ListBrowser(LiveComponent):
-    def __init__(self, items, rect, callback, font_path=FONT, font_size=18):
+class PaginatedList(LiveComponent):
+    def __init__(self, items, rect, callback, font_path=FONT, font_size=24):
         self.items = items
         self.x, self.y, self.width, self.height = rect
         self.callback = callback
@@ -14,8 +14,7 @@ class ListBrowser(LiveComponent):
         self.items_per_page = self.calculate_items_per_page(font_size)
         self.total_pages = max(1, -(-len(self.items) // self.items_per_page))  # Ceiling division
         self.create_item_buttons(font_path, font_size)
-        self.arrow_up = TextButton(text="A", x=272, y=2, font_size=24, callback=self.page_up)
-        self.arrow_down = TextButton(text="V", x=272, y=108, font_size=24, callback=self.page_down)
+
         self.needs_update = True
         self.up_active = False
         self.down_active = False
@@ -52,23 +51,13 @@ class ListBrowser(LiveComponent):
     def draw(self, draw_context):
         print("ListBrowser draw")
         # Draw the visible items for the current page
-        draw_context.rectangle((self.x, self.y, 296, 128), fill=0)
+        draw_context.rectangle((self.x, self.y, 266, 128), fill=0)
         start_index = self.current_page * self.items_per_page
         end_index = min(start_index + self.items_per_page, len(self.items))
 
         for button in self.item_buttons[start_index:end_index]:
             button.draw(draw_context)
 
-        # # Draw arrows (can use TextButton or simple text)
-        # arrow_up = TextButton(text="^", x=self.x + self.width - self.font_size, y=self.y, font_size=self.font_size, callback=self.page_up)
-        # arrow_down = TextButton(text="v", x=self.x + self.width - self.font_size, y=self.y + self.height - self.font_size, font_size=self.font_size, callback=self.page_down)
-        if self.current_page > 0:
-            self.arrow_up.draw(draw_context)
-            self.up_active = True
-
-        if self.current_page < self.total_pages - 1:
-            self.arrow_down.draw(draw_context)
-            self.down_active = True
 
     def page_up(self):
         if self.current_page > 0:
@@ -89,7 +78,3 @@ class ListBrowser(LiveComponent):
                 if button.is_pressed(touch_event.start_x, touch_event.start_y):
                     button.handle_touch(eventType, touch_event)
                     return
-            if self.arrow_up.is_pressed(touch_event.start_x, touch_event.start_y):
-                self.arrow_up.handle_touch(eventType, touch_event)
-            elif self.arrow_down.is_pressed(touch_event.start_x, touch_event.start_y):
-                self.arrow_down.handle_touch(eventType, touch_event)

@@ -3,3 +3,4 @@ from .livepage import LivePage
 from .menu import Menu
 from .keyboard import KeyboardMenu
 from .livemenu import LiveMenu
+from .browser import BrowserMenu

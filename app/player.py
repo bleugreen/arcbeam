@@ -4,7 +4,6 @@ from gui import (Button, LivePage, LiveSongBox, ProgressBar)
 
 def make_player(app, redis_client):
     def player_back_callback():
-        redis_client.publish('stop', 'process')
         app.set_active_page("browser")
 
     def pause_callback():

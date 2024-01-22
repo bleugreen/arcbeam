@@ -6,5 +6,5 @@ from .livesongbox import LiveSongBox
 from .progressbar import ProgressBar
 from .recstatus import RecStatusBar
 from .livetext import LiveTextBox
-from .browser import ListBrowser
+from .paginatedlist import PaginatedList
 from .textbutton import TextButton

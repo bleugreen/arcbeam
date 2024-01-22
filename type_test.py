@@ -5,7 +5,7 @@ from backend import RedisClient
 import json
 import time
 from gui import (App, Button, LivePage, LiveSongBox, Menu, ProgressBar,
-                 RecStatusBar, ListBrowser, KeyboardMenu)
+                 RecStatusBar, PaginatedList, KeyboardMenu)
 from config import PYTHON_PATH, LIB_PATH
 
 process = None
@@ -60,7 +60,7 @@ def player_back_callback():
     album = None
     track = None
     browse_page.elements = []
-    browse_page.add_elements(ListBrowser(artist_list, (0,0,266, 128), browse_callback, font_size=24))
+    browse_page.add_elements(PaginatedList(artist_list, (0,0,266, 128), browse_callback, font_size=24))
     browse_page.needs_update = True
     app.set_active_page("browser")
 
@@ -91,7 +91,7 @@ def album_callback(val):
     album = val
     track_list = get_track_list(artist, album)
     browse_page.elements = []
-    browse_page.add_elements(ListBrowser(track_list, (0,0,266, 128), play_track_callback, font_size=24))
+    browse_page.add_elements(PaginatedList(track_list, (0,0,266, 128), play_track_callback, font_size=24))
     browse_page.needs_update = True
 
 
@@ -101,7 +101,7 @@ def browse_callback(val):
     print(f"Artist: {artist}")
     album_list = get_album_list(artist)
     browse_page.elements = []
-    browse_page.add_elements(ListBrowser(album_list, (0,0,266, 128), album_callback, font_size=24))
+    browse_page.add_elements(PaginatedList(album_list, (0,0,266, 128), album_callback, font_size=24))
     print(browse_page.elements[0].items)
     browse_page.needs_update = True
 

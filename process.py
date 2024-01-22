@@ -19,11 +19,12 @@ def main():
     for message in pubsub.listen():
         if message['type'] == 'message':
             command = message['data'].decode('utf-8')
+            print(f"Received command: {command}")
 
             if command == 'stop:all':
                 stop_process()
                 break
-            elif 'stop:' in command:
+            elif 'stop' in command:
                 stop_process()
             elif command.startswith('start:'):
                 stop_process()
