@@ -44,7 +44,7 @@ class ListBrowser(LiveComponent):
             while button.bounding_box[2] > self.width and button.font_size > MIN_FONT_SIZE:
                 button.update(new_font_size=button.font_size - 1)
             while button.bounding_box[2] > self.width:
-                button.update(new_text=button.text[:-4]+"...")
+                button.update(new_text=button.text[:-1])
             if i % self.items_per_page == self.items_per_page - 1:
                 y_position += button.font_size + 2
             self.item_buttons.append(button)

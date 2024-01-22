@@ -1,7 +1,7 @@
 import time
 from PIL import ImageDraw
 from .display import EInkDisplay
-from . import LivePage, Page, Menu
+from . import LivePage, Page, Menu, LiveMenu
 
 
 class App:
@@ -62,7 +62,7 @@ class App:
         else:
             print(f"Unhandled touch event: {eventType}")
 
-    def run(self, refresh_interval=1):
+    def run(self, refresh_interval=0.2):
         """
         Run the application with periodic refresh for LiveData pages.
 
@@ -70,6 +70,8 @@ class App:
         """
         while True:
             if isinstance(self.active_page, LivePage):
+                self.draw_active_page()
+            elif isinstance(self.active_page, LiveMenu):
                 self.draw_active_page()
             elif isinstance(self.active_page, Menu):
                 if not self.active_page.has_drawn:

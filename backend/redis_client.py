@@ -105,6 +105,15 @@ class RedisClient:
     def get_current_song_field(self, field, page='rec'):
         return self.redis.hget(f"song:{page}", field)
 
+    def set_browse(self, field, value):
+        """ Set a single current song field. """
+        self.redis.hset(f"browser", field, value)
+    def get_browse(self, field):
+        """ Set a single current song field. """
+        return self.redis.hget(f"browser", field)
+
+
+
     def set_rec_time_status(self, device, status):
         self.redis.set(f"rec:{device}:time", status)
     def set_rec_db_status(self, device, state):

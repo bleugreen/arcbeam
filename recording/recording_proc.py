@@ -238,7 +238,7 @@ class RecordingProcess:
             self.redis.set_rec_time_status(self.device, 'error')
             return None, 0
 
-        if len(audio) < song_duration:
+        if len(audio) < song_duration * 0.99:
             print('RECORDING INCOMPLETE : ABORT')
             self.redis.set_rec_time_status(self.device, 'error')
             return None, 0

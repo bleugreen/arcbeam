@@ -113,8 +113,11 @@ class EInkDisplay:
         buffer = self.epd.getbuffer(self.image)
         if partial:
             self.epd.display_Partial(buffer)
+            self.epd.ReadBusy()
         else:
             self.epd.display_Base(buffer)
+            self.epd.ReadBusy()
+
 
         if static:
             self.sleep()
