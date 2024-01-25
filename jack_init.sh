@@ -82,4 +82,5 @@ jack_connect shairport-sync:out_R Loopback5:playback_2
 
 echo "JACK session set up complete. Starting Listener"
 
-/home/dev/env/bin/python /home/dev/cymatic-rec/monitor.py
+/home/dev/env/bin/python /home/dev/cymatic-rec/monitor.py &
+/home/dev/env/bin/python /home/dev/cymatic-rec/main.py

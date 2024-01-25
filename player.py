@@ -110,6 +110,9 @@ class AudioPlayer:
             self.current_artist = path_parts[-3]
             self.current_album = path_parts[-2]
             self.current_title = path_parts[-1].rsplit('.', 1)[0]
+            self.redis_client.set_browse('artist', self.current_artist)
+            self.redis_client.set_browse('album', self.current_album)
+            self.redis_client.set_browse('track', self.current_title)
             self.playback_finished = False
             self.current_position = 0
             self.is_paused = False

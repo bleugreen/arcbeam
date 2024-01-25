@@ -44,23 +44,21 @@ class LiveMenu(Page):
                     needs_update = True
                     element.draw(drawContext)
 
-        # Full refresh is needed if it's due and there's a text update
-        if not self.has_drawn:
-            display.draw(partial=True , static=False)
+        if needs_update or not self.has_drawn:
             self.has_drawn = True
-            for element in self.elements:
-                element.has_drawn = True
-                element.needs_update = False
-        elif needs_update:
             print(f'PARTIAL ::: Due: {full_refresh_due}, Text: {text_update}, force_refresh: {force_refresh}, timesincelast:{ current_time - self.last_full_refresh}')
-            display.draw(partial=True, static=False)  # Partial refresh
+            should_full_refresh = (full_refresh_due and text_update) or not self.has_drawn
+            display.draw(partial=(not should_full_refresh), static=False)  # Partial refresh
+            if should_full_refresh or force_refresh:
+                print('FULL')
+                self.last_full_refresh = time.time()
             for element in self.elements:
                 element.has_drawn = True
                 element.needs_update = False
 
     def activate(self):
         self.has_drawn = False
-        self.last_full_refresh = time.time()
+        # self.last_full_refresh = time.time()
         for element in self.elements:
             if isinstance(element, LiveComponent):
                 element.update_data()

@@ -4,54 +4,6 @@ import time
 from gui import PaginatedList, LivePage, LiveMenu, BrowserMenu, KeyboardMenu
 from config import LIB_PATH
 
-def rstrstr(app, redis_client):
-    artist_browser = LivePage()
-    album_browser = LivePage()
-    track_browser = LivePage()
-
-    def get_album_list(artist):
-        return sorted(os.listdir(os.path.join(LIB_PATH, artist)))
-
-    def get_track_list(artist, album):
-        path = os.path.join(LIB_PATH, artist, album)
-        return [track.rsplit('.', 1)[0] for track in sorted(os.listdir(path))]
-
-    def play_track_callback(track):
-        if not track:
-            print("No track selected")
-            return
-        redis_client.publish('start:player', 'process')
-        artist = redis_client.get_browse('artist')
-        album = redis_client.get_browse('album')
-        redis_client.set_current_song({'title': track, 'artist': artist, 'album': album}, page='player')
-        app.set_active_page("player")
-        time.sleep(1)
-        redis_client.publish(json.dumps({'command': 'play', 'artist': artist, 'album': album, 'title': track}), 'player')
-        print(f"Playing {track} from {album} by {artist}")
-
-    def album_callback(val):
-        if val:
-            print(f"Album selected: {val}")
-            redis_client.set_browse('album', val)
-            artist = redis_client.get_browse('artist')
-            track_list = get_track_list(artist, val)
-            track_browser.elements = [PaginatedList(track_list, (0,0,266, 128), play_track_callback, font_size=24)]
-            track_browser.needs_update = True
-            app.set_active_page("track_browser")
-
-    def browse_callback(val):
-        if val:
-            redis_client.set_browse('artist', val)
-            album_list = get_album_list(val)
-            album_browser.elements = [PaginatedList(album_list, (0,0,266, 128), album_callback, font_size=24)]
-            album_browser.needs_update = True
-            app.set_active_page("album_browser")
-
-    artist_list = sorted(os.listdir(LIB_PATH))
-    artist_browser.add_elements(PaginatedList(artist_list, (0,0,266, 128), browse_callback, font_size=24))
-
-    app.add_page("album_browser", album_browser)
-    app.add_page("track_browser", track_browser)
 
 
 
@@ -69,9 +21,26 @@ def make_browser(app, redis_client):
         print(f'Keyboard submitted: {text}')
         nonlocal filter_text
         filter_text[artist_browser.level] = text
-        items = get_list_items(artist_browser.level)
-        artist_browser.update_items(items, artist_browser.level)
+        # items = get_list_items(artist_browser.level)
+        # artist_browser.update_items(items, artist_browser.level)
+        artist_browser.navigate_to_match(text)
+        filter_text[artist_browser.level] = ''
         app.set_active_page("browser")
+
+    def get_list_items(level):
+        if level == 'artist':
+            artists = os.listdir(LIB_PATH)
+            return sorted(artists, key=lambda s: s.lower())
+        elif level == 'album':
+            artist = redis_client.get_browse('artist')
+            albums = os.listdir(os.path.join(LIB_PATH, artist))
+            return sorted(albums, key=lambda s: s.lower())
+        elif level == 'track':
+            artist = redis_client.get_browse('artist')
+            album = redis_client.get_browse('album')
+            path = os.path.join(LIB_PATH, artist, album)
+            tracks = os.listdir(path)
+            return sorted([s.rsplit('.', 1)[0] for s in tracks], key=lambda s: s.lower())
 
     def keyboard_cancel():
         print('Keyboard cancelled')
@@ -82,28 +51,7 @@ def make_browser(app, redis_client):
         app.set_active_page("browser")
 
     filter_page = KeyboardMenu(on_submit=keyboard_submit, on_cancel=keyboard_cancel)
-
-    def get_list_items(level):
-        nonlocal filter_text
-        if level == 'artist':
-            artist_list = sorted(os.listdir(LIB_PATH))
-            if filter_text[level]:
-                return [artist for artist in artist_list if artist.lower().startswith(filter_text[level].lower())]
-            return artist_list
-        elif level == 'album':
-            artist = redis_client.get_browse('artist')
-            album_list= sorted(os.listdir(os.path.join(LIB_PATH, artist)))
-            if filter_text[level]:
-                return [album for album in album_list if album.lower().startswith(filter_text[level].lower())]
-            return album_list
-        elif level == 'track':
-            artist = redis_client.get_browse('artist')
-            album = redis_client.get_browse('album')
-            path = os.path.join(LIB_PATH, artist, album)
-            track_list= [track.rsplit('.', 1)[0] for track in sorted(os.listdir(path))]
-            if filter_text[level]:
-                return [track for track in track_list if track.lower().startswith(filter_text[level].lower())]
-            return track_list
+    artist_browser.get_data = get_list_items
 
     def play_track(track):
         if not track:

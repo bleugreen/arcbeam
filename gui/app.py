@@ -39,12 +39,12 @@ class App:
         if name in self.pages and self.pages[name] is not self.active_page:
             self.active_page = self.pages[name]
             self.drawContext.rectangle((0, 0, self.display.width, self.display.height), fill=0)
-            # self.display.draw(partial=False, static=False)
-            # time.sleep(0.75)
             self.active_page.activate()
             if force_refresh:
-                self.draw_active_page(force_refresh=True)
-            # self.draw_active_page(force_refresh=True)
+                if isinstance(self.active_page, LivePage):
+                    self.draw_active_page(force_refresh=True)
+                elif isinstance(self.active_page, LiveMenu):
+                    self.draw_active_page()
         elif name in self.pages:
             print(f"Page '{name}' is already active")
         else:
@@ -62,7 +62,7 @@ class App:
         else:
             print(f"Unhandled touch event: {eventType}")
 
-    def run(self, refresh_interval=0.2):
+    def run(self, refresh_interval=0.1):
         """
         Run the application with periodic refresh for LiveData pages.
 

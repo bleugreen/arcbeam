@@ -24,10 +24,22 @@ class SongQueue:
         return self._find_next_album_or_artist(current_dir)
 
     def _find_next_album_or_artist(self, current_dir):
-        # Walk the directory tree
+        # Determine the current artist's directory
+        current_artist_dir = os.path.dirname(current_dir)
+
+        # Check for the next album in the current artist's directory
+        artist_albums = sorted([d for d in os.listdir(current_artist_dir) if os.path.isdir(os.path.join(current_artist_dir, d))])
+        current_album_index = artist_albums.index(os.path.basename(current_dir))
+        for next_album in artist_albums[current_album_index + 1:]:
+            album_path = os.path.join(current_artist_dir, next_album)
+            album_files = sorted([f for f in os.listdir(album_path) if self._is_audio_file(os.path.join(album_path, f))])
+            if album_files:
+                return os.path.join(album_path, album_files[0])
+
+        # If no next album in current artist's directory, move to the next artist
         for root, dirs, _ in os.walk(self.base_directory):
             dirs.sort()
-            if root > current_dir:
+            if root > current_artist_dir:
                 for dir_name in dirs:
                     album_path = os.path.join(root, dir_name)
                     album_files = sorted([f for f in os.listdir(album_path) if self._is_audio_file(os.path.join(album_path, f))])

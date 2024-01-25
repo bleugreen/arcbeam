@@ -14,14 +14,15 @@ class PaginatedList(LiveComponent):
         self.items_per_page = self.calculate_items_per_page(font_size)
         self.total_pages = max(1, -(-len(self.items) // self.items_per_page))  # Ceiling division
         self.create_item_buttons(font_path, font_size)
-
+        self.has_drawn = False
         self.needs_update = True
         self.up_active = False
         self.down_active = False
 
     def update_data(self):
         # No data to update
-        pass
+        for button in self.item_buttons:
+            button.needs_update = True
 
     def calculate_items_per_page(self, font_size):
         # Use font size for height calculation
@@ -49,12 +50,12 @@ class PaginatedList(LiveComponent):
             self.item_buttons.append(button)
 
     def draw(self, draw_context):
-        print("ListBrowser draw")
+        print(f"ListBrowser draw, current page: {self.current_page}")
         # Draw the visible items for the current page
         draw_context.rectangle((self.x, self.y, 266, 128), fill=0)
         start_index = self.current_page * self.items_per_page
         end_index = min(start_index + self.items_per_page, len(self.items))
-
+        print(f"Drawing items {start_index} to {end_index}")
         for button in self.item_buttons[start_index:end_index]:
             button.draw(draw_context)
 

@@ -1,0 +1,11 @@
+[Unit]
+Description=Button Listener Service
+
+[Service]
+ExecStart=/home/dev/env/bin/python3 /home/dev/cymatic-rec/btn_listener.py
+WorkingDirectory=/home/dev/cymatic-rec
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
