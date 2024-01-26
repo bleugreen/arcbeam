@@ -140,3 +140,4 @@ main() {
 }
 
 main
+sudo reboot
