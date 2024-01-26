@@ -2,8 +2,8 @@
 Description=Fan Speed Control Service
 
 [Service]
-ExecStart=/home/dev/env/bin/python3 /home/dev/cymatic-rec/services/fan.py
-WorkingDirectory=/home/dev/cymatic-rec
+ExecStart=/home/dev/env/bin/python3 /home/dev/arcbeam/services/fan.py
+WorkingDirectory=/home/dev/arcbeam
 Restart=always
 User=root
 

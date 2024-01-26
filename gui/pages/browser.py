@@ -15,7 +15,7 @@ BTN_DATA = {
 
 
 class BrowserMenu(LiveMenu):
-    def __init__(self, items, rect, get_data=None, level='artist', on_select=None, on_back=None, on_filter=None, img_path=browser_path, button_data=BTN_DATA):
+    def __init__(self, items, rect, get_data=None, level='artist', on_select=None, on_back=None, on_filter=None, on_btn=None, img_path=browser_path, button_data=BTN_DATA):
         super().__init__(img_path)
         self.items = items
         self.level = level
@@ -24,6 +24,7 @@ class BrowserMenu(LiveMenu):
         self.on_select = on_select
         self.on_back = on_back
         self.on_filter = on_filter
+        self.on_btn = on_btn
         self.get_data = get_data
         self.elements = []
         self.current_page = {
@@ -76,9 +77,23 @@ class BrowserMenu(LiveMenu):
         self.items = items
         self.make_elements()
 
+    def handle_button(self, button_event):
+        """
+        Handle a button event by delegating it to the appropriate UI element.
+
+        :param button_event: The ButtonEvent object.
+        """
+        print(f"Page received button event: {button_event.button_name}-{button_event.event_type}")
+        if button_event.button_name == 'bottom' and button_event.event_type == 'up':
+            self.page_list.page_down()
+            self.current_page[self.level] = self.page_list.current_page
+        elif button_event.button_name == 'top' and button_event.event_type == 'up':
+            self.page_list.page_up()
+            self.current_page[self.level] = self.page_list.current_page
+        if self.on_btn is not None:
+            self.on_btn(button_event)
 
     def onPress(self, label):
-        # Placeholder for button press logic
         print(f"Button {label} pressed")
         if label == 'back':
             print("Back pressed")

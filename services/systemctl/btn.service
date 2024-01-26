@@ -2,8 +2,8 @@
 Description=Button Listener Service
 
 [Service]
-ExecStart=/home/dev/env/bin/python3 /home/dev/cymatic-rec/btn_listener.py
-WorkingDirectory=/home/dev/cymatic-rec
+ExecStart=/home/dev/env/bin/python3 /home/dev/arcbeam/btn_listener.py
+WorkingDirectory=/home/dev/arcbeam
 Restart=always
 User=root
 

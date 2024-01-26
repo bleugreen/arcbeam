@@ -1,7 +1,7 @@
 from .textbutton import TextButton
 from .live import LiveComponent
 
-FONT = "/home/dev/cymatic-rec/gui/fonts/ARCADE_R.TTF"
+FONT = "/home/dev/arcbeam/gui/fonts/ARCADE_R.TTF"
 MIN_FONT_SIZE = 14
 class PaginatedList(LiveComponent):
     def __init__(self, items, rect, callback, font_path=FONT, font_size=24):

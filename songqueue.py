@@ -5,8 +5,16 @@ class SongQueue:
     def __init__(self, base_directory):
         self.base_directory = base_directory
         self.current_file_path = None
+        self.next = []
+
+    def add(self, file_path):
+        self.next.append(file_path)
+
 
     def get_next_song(self):
+        if self.next:
+            return self.next.pop(0)
+
         if self.current_file_path is None:
             return self._get_first_song()
 

@@ -16,6 +16,7 @@ def make_browser(app, redis_client):
         'album': '',
         'track': ''
     }
+    playing = False
 
     def keyboard_submit(text):
         print(f'Keyboard submitted: {text}')
@@ -54,6 +55,7 @@ def make_browser(app, redis_client):
     artist_browser.get_data = get_list_items
 
     def play_track(track):
+        nonlocal playing
         if not track:
             print("No track selected")
             return
@@ -62,6 +64,7 @@ def make_browser(app, redis_client):
         album = redis_client.get_browse('album')
         redis_client.set_current_song({'title': track, 'artist': artist, 'album': album}, page='player')
         app.set_active_page("player")
+        playing = True
         next_level = 'track'
         print(f'setting {next_level} page')
         items = get_list_items(next_level)
@@ -88,7 +91,7 @@ def make_browser(app, redis_client):
 
     def on_back(level):
         print("Back pressed")
-        nonlocal filter_text
+        nonlocal filter_text, playing
         if filter_text[level]:
                 filter_text[level] = ''
                 items = get_list_items(level)
@@ -98,6 +101,7 @@ def make_browser(app, redis_client):
             redis_client.reset_browse()
             redis_client.publish('stop', 'process')
             app.set_active_page("main_menu")
+            playing = False
         elif level == 'album':
             redis_client.redis.hdel('browse', 'artist')
             next_level = 'artist'
@@ -115,8 +119,25 @@ def make_browser(app, redis_client):
         filter_page.text_state = filter_text[artist_browser.level]
         app.set_active_page("filter")
 
+    def on_btn(btn):
+        nonlocal playing
+        print(f"Button pressed: {btn}")
+        if btn.button_name == 'mid' and btn.event_type == 'up':
+            if btn.duration > 1:
+                playing = False
+                redis_client.reset_browse()
+                redis_client.publish('stop', 'process')
+                app.set_active_page("main_menu")
+            elif playing:
+                app.set_active_page("player")
+            else:
+                on_back(artist_browser.level)
+
+
+
     # def on_filter
     artist_browser.on_select = on_select
+    artist_browser.on_btn = on_btn
     artist_browser.on_back = on_back
     artist_browser.on_filter = on_filter
     artist_browser.make_elements()

@@ -33,5 +33,13 @@ class Page:
             if hasattr(element, 'handle_touch'):
                 element.handle_touch(eventType, touch_event)
 
+    def handle_button(self, button_event):
+        """
+        Handle a button event by delegating it to the appropriate UI element.
+
+        :param button_event: The ButtonEvent object.
+        """
+        print(f"Page received button event: {button_event.button_name}-{button_event.event_type}")
+
     def activate(self):
         print("Page activated - Default implementation does nothing")

@@ -132,10 +132,13 @@ class AudioPlayer:
             file_path = self.construct_file_path(data)
             if file_path:
                 # Stop current playback if any
-                self.queue.set_current_song(file_path)
-                self.stop()
-                self.playback_thread = threading.Thread(target=self.play_audio, args=(file_path,))
-                self.playback_thread.start()
+                if self.playback_thread is not None:
+                    self.queue.add(file_path)
+                else:
+                    self.queue.set_current_song(file_path)
+                    self.stop()
+                    self.playback_thread = threading.Thread(target=self.play_audio, args=(file_path,))
+                    self.playback_thread.start()
         elif command == 'pause':
             self.pause()
         elif command == 'resume':
