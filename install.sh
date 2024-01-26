@@ -15,7 +15,7 @@ install_deps () {
 }
 
 setup_audio(){
-    sudo usermod -a -G audio dev
+    sudo usermod -a -G audio $USER
     echo '@audio - rtprio 95' | sudo tee -a /etc/security/limits.conf
     echo '@audio - memlock unlimited' | sudo tee -a /etc/security/limits.conf
 }
@@ -36,7 +36,7 @@ install_alac() {
     cd ~
     git clone https://github.com/mikebrady/alac.git
     cd alac
-    autoreconf -fi && ./configure && make && sudo make install && sudo ldconfig
+    autoreconf -fi && ./configure && sudo make && sudo make install && sudo ldconfig
 }
 
 install_shairport() {
@@ -101,6 +101,7 @@ setup_arcbeam() {
     cd arcbeam
     deploy_systemd_services
     sudo cp services/shairport-sync.conf /etc/shairport-sync.conf
+    sudo cp services/asound.conf /etc/asound.conf
     echo "sudo systemctl start arcbeam.service" >> ~/.bash_profile
     pip install -r requirements.txt
 }
@@ -109,11 +110,33 @@ main() {
     update_system
     install_deps
     install_nqptp
-    install_alac
+    max_attempts=3
+    attempt=0
+
+    # Retry loop
+    while [ $attempt -lt $max_attempts ]; do
+        install_alac
+        exit_status=$?
+
+        if [ $exit_status -eq 0 ]; then
+            echo "Function succeeded."
+            break
+        else
+            echo "Function failed. Attempt $((attempt+1))/$max_attempts."
+            attempt=$((attempt+1))
+            sleep 1 # Delay for 1 second before retrying
+        fi
+    done
+
+    if [ $attempt -eq $max_attempts ]; then
+        echo "Function failed after $max_attempts attempts."
+    fi
+
     install_shairport
     install_python
     install_eink_libs
     setup_arcbeam
+    setup_audio
 }
 
 main
