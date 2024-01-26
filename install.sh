@@ -10,8 +10,8 @@ install_deps () {
     sudo apt install -y build-essential git autoconf automake libtool lsb-release curl gpg \
     libpopt-dev libconfig-dev libasound2-dev avahi-daemon libavahi-client-dev libssl-dev libsoxr-dev \
     libplist-dev libsodium-dev libavutil-dev libavcodec-dev libavformat-dev uuid-dev libgcrypt-dev xxd \
-    libjack-dev python3-pip python3-gpiozero cmake libglib2.0-dev libcairo2-dev libgirepository1.0-dev redis \
-    gpiod libgpiod-dev jackd
+    libjack-dev python3 python3-pip python3-gpiozero python3-setuptools cmake libglib2.0-dev libcairo2-dev libgirepository1.0-dev redis \
+    gpiod libgpiod-dev jackd i2c-tools python3-libgpiod
 }
 
 install_nqptp(){
@@ -20,7 +20,7 @@ install_nqptp(){
     cd nqptp
     autoreconf -fi
     ./configure --with-systemd-startup
-    sudo make
+    make
     sudo make install
     sudo systemctl enable nqptp
     sudo systemctl start nqptp
@@ -32,7 +32,7 @@ install_alac() {
     cd alac
     autoreconf -fi
     ./configure
-    sudo make
+    make
     sudo make install
     sudo ldconfig
 }
@@ -49,14 +49,15 @@ install_shairport() {
 }
 
 install_python() {
-    sudo apt install -y  --upgrade python3-setuptools
     cd ~
     python -m venv env --system-site-packages
     source env/bin/activate
-    pip install numpy Cython pycairo
-    pip install --upgrade adafruit-python-shell
-    wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/master/raspi-blinka.py
-    sudo -E env PATH=$PATH python3 raspi-blinka.py
+    pip install numpy Cython pycairo RPi.GPIO adafruit-blinka
+    sudo raspi-config nonint do_i2c 0
+    sudo raspi-config nonint do_spi 0
+    sudo raspi-config nonint do_serial_hw 0
+    sudo raspi-config nonint do_ssh 0
+    sudo raspi-config nonint disable_raspi_config_at_boot 0
 }
 
 deploy_systemd_services() {
