@@ -12,27 +12,45 @@ update_system() {
     apt-get upgrade -y
 }
 
-install_shairport() {
-    apt install --no-install-recommends -y build-essential git autoconf automake libtool \
+install_deps () {
+    apt install -y build-essential git autoconf automake libtool lsb-release curl gpg \
     libpopt-dev libconfig-dev libasound2-dev avahi-daemon libavahi-client-dev libssl-dev libsoxr-dev \
-    libplist-dev libsodium-dev libavutil-dev libavcodec-dev libavformat-dev uuid-dev libgcrypt-dev xxd libjack-dev
+    libplist-dev libsodium-dev libavutil-dev libavcodec-dev libavformat-dev uuid-dev libgcrypt-dev xxd \
+    libjack-dev python3-pip python3-gpiozero cmake libglib2.0-dev libcairo2-dev libgirepository1.0-dev redis \
 
+    curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
+    echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
+    sudo apt-get update
+    sudo apt-get install redis
+    systemctl enable redis-server.service
+    systemctl enable redis.service
+}
+
+install_nqptp(){
+    cd ~
     git clone https://github.com/mikebrady/nqptp.git
     cd nqptp
     autoreconf -fi
     ./configure --with-systemd-startup
     make
     make install
-    cd ~
+    systemctl enable nqptp
+    systemctl start nqptp
+}
 
+install_alac() {
+    cd ~
     git clone https://github.com/mikebrady/alac.git
     cd alac
     autoreconf -fi
-    ./configure --with-systemd-startup
+    ./configure
     make
     make install
-    cd ~
+    ldconfig
+}
 
+install_shairport() {
+    cd ~
     git clone https://github.com/mikebrady/shairport-sync.git
     cd shairport-sync
     autoreconf -fi
@@ -43,7 +61,6 @@ install_shairport() {
 }
 
 install_python() {
-    apt-get install -y python3-pip python3-gpiozero cmake libglib2.0-dev libcairo2-dev libgirepository1.0-dev redis
     apt install -y  --upgrade python3-setuptools
     cd ~
     python -m venv env --system-site-packages
@@ -55,6 +72,7 @@ install_python() {
 }
 
 deploy_systemd_services() {
+    cd ~/arcbeam
     local source_dir="services/systemctl"  # Update this path if necessary
     local exclude_service="arcbeam.service"
     # Copy each .service file and enable it
@@ -68,6 +86,7 @@ deploy_systemd_services() {
     done
     cp "$source_dir"/autologin.conf /etc/systemd/system/getty@tty1.service.d/
     systemctl daemon-reload
+    systemctl restart getty@tty1.service
 }
 
 setup_arcbeam() {
@@ -82,7 +101,9 @@ setup_arcbeam() {
 
 main() {
     update_system
-    install_dependencies
+    install_deps
+    install_nqptp
+    install_alac
     install_shairport
     install_python
     setup_arcbeam
