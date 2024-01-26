@@ -8,23 +8,23 @@ fi
 
 # Function to update and upgrade the system
 update_system() {
-    apt-get update
-    apt-get upgrade -y
+    sudo apt-get update
+    sudo apt-get upgrade -y
 }
 
 install_deps () {
-    apt install -y build-essential git autoconf automake libtool lsb-release curl gpg \
+    sudo apt install -y build-essential git autoconf automake libtool lsb-release curl gpg \
     libpopt-dev libconfig-dev libasound2-dev avahi-daemon libavahi-client-dev libssl-dev libsoxr-dev \
     libplist-dev libsodium-dev libavutil-dev libavcodec-dev libavformat-dev uuid-dev libgcrypt-dev xxd \
     libjack-dev python3-pip python3-gpiozero cmake libglib2.0-dev libcairo2-dev libgirepository1.0-dev redis \
-    gpiod libgpiod-dev
+    gpiod libgpiod-dev jackd
 
     curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
     echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
     sudo apt-get update
     sudo apt-get install redis
-    systemctl enable redis-server.service
-    systemctl enable redis.service
+    sudo systemctl enable redis-server.service
+    sudo systemctl enable redis.service
 }
 
 install_nqptp(){
@@ -33,10 +33,10 @@ install_nqptp(){
     cd nqptp
     autoreconf -fi
     ./configure --with-systemd-startup
-    make
-    make install
-    systemctl enable nqptp
-    systemctl start nqptp
+    sudo make
+    sudo make install
+    sudo systemctl enable nqptp
+    sudo systemctl start nqptp
 }
 
 install_alac() {
@@ -45,9 +45,9 @@ install_alac() {
     cd alac
     autoreconf -fi
     ./configure
-    make
-    make install
-    ldconfig
+    sudo make
+    sudo make install
+    sudo ldconfig
 }
 
 install_shairport() {
@@ -57,12 +57,12 @@ install_shairport() {
     autoreconf -fi
     ./configure --sysconfdir=/etc --with-alsa --with-soxr --with-avahi --with-ssl=openssl --with-systemd --with-airplay-2 \
     --with-apple-alac --with-metadata --with-jack
-    make
-    make install
+    sudo make
+    sudo make install
 }
 
 install_python() {
-    apt install -y  --upgrade python3-setuptools
+    sudo apt install -y  --upgrade python3-setuptools
     cd ~
     python -m venv env --system-site-packages
     source env/bin/activate
@@ -78,16 +78,16 @@ deploy_systemd_services() {
     local exclude_service="arcbeam.service"
     # Copy each .service file and enable it
     for service_file in "$source_dir"/*.service; do
-        cp "$service_file" /etc/systemd/system/
+        sudo cp "$service_file" /etc/systemd/system/
         local service_name=$(basename "$service_file")
         if [ "$service_name" != "$exclude_service" ]; then
-            systemctl daemon-reload
-            systemctl enable "$service_name"
+            sudo systemctl daemon-reload
+            sudo systemctl enable "$service_name"
         fi
     done
-    cp "$source_dir"/autologin.conf /etc/systemd/system/getty@tty1.service.d/
-    systemctl daemon-reload
-    systemctl restart getty@tty1.service
+    sudo cp "$source_dir"/autologin.conf /etc/systemd/system/getty@tty1.service.d/
+    sudo systemctl daemon-reload
+    sudo systemctl restart getty@tty1.service
 }
 
 install_eink_libs() {
@@ -95,14 +95,14 @@ install_eink_libs() {
     wget https://github.com/joan2937/lg/archive/master.zip
     unzip master.zip
     cd lg-master
-    make
-    make install
+    sudo make
+    sudo make install
 
     cd ~
     wget http://www.airspayce.com/mikem/bcm2835/bcm2835-1.71.tar.gz
     tar zxvf bcm2835-1.71.tar.gz
     cd bcm2835-1.71/
-    ./configure && make && make check && make install
+    sudo ./configure && sudo make && sudo make check && sudo make install
 }
 
 setup_arcbeam() {
