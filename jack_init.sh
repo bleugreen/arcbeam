@@ -60,7 +60,6 @@ jackd -d alsa -r "$SAMPLERATE" -p "$PERIOD" -n "$CHANNELS" -d "$DEVICE" &
 sleep 1
 
 # Start applications
-
 alsa_out -d hw:Loopback,1,1 -j "Loopback1" &
 alsa_out -d hw:Loopback,1,3 -j "Loopback3" &
 alsa_out -d hw:Loopback,1,5 -j "Loopback5" &
