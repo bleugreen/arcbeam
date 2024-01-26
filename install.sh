@@ -17,6 +17,7 @@ install_deps () {
     libpopt-dev libconfig-dev libasound2-dev avahi-daemon libavahi-client-dev libssl-dev libsoxr-dev \
     libplist-dev libsodium-dev libavutil-dev libavcodec-dev libavformat-dev uuid-dev libgcrypt-dev xxd \
     libjack-dev python3-pip python3-gpiozero cmake libglib2.0-dev libcairo2-dev libgirepository1.0-dev redis \
+    gpiod libgpiod-dev
 
     curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
     echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
@@ -89,6 +90,21 @@ deploy_systemd_services() {
     systemctl restart getty@tty1.service
 }
 
+install_eink_libs() {
+    cd ~
+    wget https://github.com/joan2937/lg/archive/master.zip
+    unzip master.zip
+    cd lg-master
+    make
+    make install
+
+    cd ~
+    wget http://www.airspayce.com/mikem/bcm2835/bcm2835-1.71.tar.gz
+    tar zxvf bcm2835-1.71.tar.gz
+    cd bcm2835-1.71/
+    ./configure && make && make check && make install
+}
+
 setup_arcbeam() {
     cd ~
     git clone https://github.com/Mitchell57/arcbeam.git
@@ -106,6 +122,7 @@ main() {
     install_alac
     install_shairport
     install_python
+    install_eink_libs
     setup_arcbeam
 }
 
