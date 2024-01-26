@@ -11,7 +11,13 @@ install_deps () {
     libpopt-dev libconfig-dev libasound2-dev avahi-daemon libavahi-client-dev libssl-dev libsoxr-dev \
     libplist-dev libsodium-dev libavutil-dev libavcodec-dev libavformat-dev uuid-dev libgcrypt-dev xxd \
     libjack-dev python3 python3-pip python3-gpiozero python3-setuptools cmake libglib2.0-dev libcairo2-dev libgirepository1.0-dev redis \
-    gpiod libgpiod-dev jackd i2c-tools python3-libgpiod
+    gpiod libgpiod-dev jackd i2c-tools python3-libgpiod yq alsa-tools
+}
+
+setup_audio(){
+    sudo usermod -a -G audio dev
+    echo '@audio - rtprio 95' | sudo tee -a /etc/security/limits.conf
+    echo '@audio - memlock unlimited' | sudo tee -a /etc/security/limits.conf
 }
 
 install_nqptp(){
@@ -30,11 +36,7 @@ install_alac() {
     cd ~
     git clone https://github.com/mikebrady/alac.git
     cd alac
-    autoreconf -fi
-    ./configure
-    make
-    sudo make install
-    sudo ldconfig
+    autoreconf -fi && ./configure && make && sudo make install && sudo ldconfig
 }
 
 install_shairport() {
@@ -44,7 +46,7 @@ install_shairport() {
     autoreconf -fi
     ./configure --sysconfdir=/etc --with-alsa --with-soxr --with-avahi --with-ssl=openssl --with-systemd --with-airplay-2 \
     --with-apple-alac --with-metadata --with-jack
-    sudo make
+    make
     sudo make install
 }
 
@@ -98,7 +100,7 @@ setup_arcbeam() {
     git clone https://github.com/Mitchell57/arcbeam.git
     cd arcbeam
     deploy_systemd_services
-    cp services/shairport-sync.conf /etc/shairport-sync.conf
+    sudo cp services/shairport-sync.conf /etc/shairport-sync.conf
     echo "sudo systemctl start arcbeam.service" >> ~/.bash_profile
     pip install -r requirements.txt
 }
