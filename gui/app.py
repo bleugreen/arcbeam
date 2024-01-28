@@ -1,10 +1,10 @@
 import time
 from PIL import ImageDraw
-from .display import EInkDisplay
-from . import LivePage, Page, Menu, LiveMenu
-import threading
-import redis
+from backend import RedisSubscriber
 from structs.buttonevent import ButtonEvent
+from . import LiveMenu, LivePage, Menu, Page
+from .display import EInkDisplay
+
 
 class App:
     def __init__(self):
@@ -15,21 +15,7 @@ class App:
         self.drawContext = ImageDraw.Draw(self.display.image)
         self.pages = {}
         self.active_page:Page = None
-        self.button_listener_thread = threading.Thread(target=self.button_listener)
-        self.button_listener_thread.start()
-
-    def button_listener(self):
-        """
-        Listen for button events from the Redis 'button' channel.
-        """
-        r = redis.Redis(host='localhost', port=6379, db=0)
-        pubsub = r.pubsub()
-        pubsub.subscribe('button')
-
-        for message in pubsub.listen():
-            if message['type'] == 'message':
-                button_event = ButtonEvent.from_string(message['data'].decode())
-                self.handle_button_event(button_event)
+        self.button_sub = RedisSubscriber('button', self.handle_button_event)
 
     def draw_active_page(self, force_refresh=False):
         """
@@ -58,7 +44,7 @@ class App:
             self.drawContext.rectangle((0, 0, self.display.width, self.display.height), fill=0)
             self.active_page.activate()
             if force_refresh:
-                if isinstance(self.active_page, LivePage):
+                if isinstance(self.active_page, (LivePage, Menu)):
                     self.draw_active_page(force_refresh=True)
                 elif isinstance(self.active_page, LiveMenu):
                     self.draw_active_page()
@@ -67,13 +53,13 @@ class App:
         else:
             print(f"Page '{name}' not found")
 
-    def handle_button_event(self, button_event:ButtonEvent):
+    def handle_button_event(self, event):
         """
         Handle button events.
 
         :param button_event: The ButtonEvent object.
         """
-        self.active_page.handle_button(button_event)
+        self.active_page.handle_button(ButtonEvent.from_string(event))
 
     def handle_global_touch(self, eventType, touch_event):
         """
@@ -106,4 +92,4 @@ class App:
 
     def stop(self):
         self.display.stop()
-        self.button_listener_thread.do_run = False
+        self.button_sub.stop()

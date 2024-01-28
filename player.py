@@ -3,11 +3,17 @@ import soundfile as sf
 import numpy as np
 import threading
 import time
+import logging
 import json
 import os
+from signal import pause
+
 from backend import RedisClient
 from config import LIB_PATH
 from songqueue import SongQueue
+
+logging.basicConfig(level=logging.INFO)
+
 class AudioPlayer:
     def __init__(self, client_name="ArcbeamPlayer", max_channels=2, base_directory=LIB_PATH):
         self.client_name = client_name
@@ -50,10 +56,14 @@ class AudioPlayer:
                 self.client.connect(port, self.target_ports[i])
             except Exception as e:
                 print(f"Error connecting {port} to {self.target_ports[i]}: {e}")
-
+        start_time = time.time()
         while not self.playback_finished:
-            time.sleep(1)
-            self.update_player_state()
+            time.sleep(0.1)
+            current_time = time.time()
+            elapsed_time = current_time - start_time
+
+            if int(elapsed_time) % 2 == 0:
+                self.update_player_state()
 
         print("Playback finished")
         self.client.deactivate()
@@ -83,15 +93,6 @@ class AudioPlayer:
 
     def resume(self):
         self.is_paused = False
-        self.update_player_state()
-
-    def stop(self):
-        self.playback_finished = True
-        self.is_paused = False
-        self.current_position = 0
-        if self.playback_thread is not None:
-            self.playback_thread.join()
-        self.playback_thread = None
         self.update_player_state()
 
     def run(self, channel='player'):
@@ -133,12 +134,11 @@ class AudioPlayer:
             if file_path:
                 # Stop current playback if any
                 if self.playback_thread is not None:
-                    self.queue.add(file_path)
-                else:
-                    self.queue.set_current_song(file_path)
                     self.stop()
-                    self.playback_thread = threading.Thread(target=self.play_audio, args=(file_path,))
-                    self.playback_thread.start()
+
+                self.queue.set_current_song(file_path)
+                self.playback_thread = threading.Thread(target=self.play_audio, args=(file_path,))
+                self.playback_thread.start()
         elif command == 'pause':
             self.pause()
         elif command == 'resume':
@@ -184,6 +184,41 @@ class AudioPlayer:
             return len(self.data) / self.client.samplerate
         return 0
 
+    def stop(self):
+        self.playback_finished = True
+        self.is_paused = False
+        self.current_position = 0
+        if self.playback_thread is not None:
+            self.playback_thread.join(timeout=10)
+            if self.playback_thread.is_alive():
+                logging.warning("Playback thread did not terminate.")
+            self.playback_thread = None
+
+        self.update_player_state()
+
+    def deactivate_client(self):
+        try:
+            self.client.deactivate()
+            logging.info("JACK client deactivated.")
+        except Exception as e:
+            logging.error(f"Error deactivating JACK client: {e}")
+
+    def cleanup(self):
+        logging.info("Cleaning up player resources")
+        self.stop()
+        self.deactivate_client()
+        try:
+            self.client.close()
+            logging.info("JACK client closed.")
+        except Exception as e:
+            logging.error(f"Error closing JACK client: {e}")
+
 if __name__ == "__main__":
     player = AudioPlayer()
-    player.run()
+    try:
+        player.run()
+        pause()
+    except Exception as e:
+        logging.error(f"Error in player: {e}")
+    finally:
+        player.cleanup()

@@ -21,7 +21,7 @@ class AirplayRecorder:
         self.redis_client = RedisClient()
         self.redis_pubsub = redis.Redis(
             host='localhost', port=6379, db=0).pubsub()
-        self.redis_pubsub.subscribe('crec')
+        self.redis_pubsub.subscribe('metadata')
         print(f'recording {LIB_FILETYPE} files to {LIB_PATH}')
         signal.signal(signal.SIGINT, self.signal_handler)
         signal.signal(signal.SIGTERM, self.signal_handler)

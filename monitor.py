@@ -6,7 +6,7 @@ from backend.redis_client import (RedisClient, bundle_message, ctl_message,
 from time_mgmt import amt_ns_to_ms
 
 # Publish a message
-channel = 'crec'
+channel = 'metadata'
 bundle = {}
 in_bundle = False
 

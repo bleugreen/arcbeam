@@ -1,7 +1,7 @@
 from PIL import ImageFont
 from . import LiveComponent
 
-DEFAULT_FONT_PATH = "../fonts/ARCADE_R.TTF"
+DEFAULT_FONT_PATH = "gui/fonts/ARCADE_R.TTF"
 DEFAULT_FONT_SIZE = 14
 BG_MARGIN = 5
 

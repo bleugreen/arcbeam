@@ -11,13 +11,15 @@ install_deps () {
     libpopt-dev libconfig-dev libasound2-dev avahi-daemon libavahi-client-dev libssl-dev libsoxr-dev \
     libplist-dev libsodium-dev libavutil-dev libavcodec-dev libavformat-dev uuid-dev libgcrypt-dev xxd \
     libjack-dev python3 python3-pip python3-gpiozero python3-setuptools cmake libglib2.0-dev libcairo2-dev libgirepository1.0-dev redis \
-    gpiod libgpiod-dev jackd i2c-tools python3-libgpiod yq alsa-tools
+    gpiod libgpiod-dev i2c-tools python3-libgpiod yq alsa-tools jackd2
 }
 
 setup_audio(){
     sudo usermod -a -G audio $USER
     echo '@audio - rtprio 95' | sudo tee -a /etc/security/limits.conf
     echo '@audio - memlock unlimited' | sudo tee -a /etc/security/limits.conf
+    sudo modprobe snd-aloop
+    echo "snd-aloop" | sudo tee -a /etc/modules
 }
 
 install_nqptp(){
@@ -46,6 +48,14 @@ install_shairport() {
     autoreconf -fi
     ./configure --sysconfdir=/etc --with-alsa --with-soxr --with-avahi --with-ssl=openssl --with-systemd --with-airplay-2 \
     --with-apple-alac --with-metadata --with-jack
+    make
+    sudo make install
+
+    cd ~
+    git clone https://github.com/mikebrady/shairport-sync-metadata-reader.git
+    cd shairport-sync-metadata-reader
+    autoreconf -fi
+    ./configure
     make
     sudo make install
 }

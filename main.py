@@ -1,21 +1,16 @@
+import logging
 import sys
+from app import (make_browser, make_main_menu, make_player, make_recorder,
+                 make_title_page)
 from backend import RedisClient
 from gui import App
-from app import make_title_page, make_main_menu, make_recorder, make_browser, make_player
-from config import PYTHON_PATH
-import subprocess
-import threading
+from process import ProcessManager
 
+logging.basicConfig(level=logging.INFO)
 redis_client = RedisClient()
 
+proc_manager = ProcessManager()
 
-def start_process_thread():
-    command = [PYTHON_PATH, '-m', 'process']
-    return threading.Thread(target=subprocess.Popen, args=(command,)).start()
-
-proc_thread = start_process_thread()
-
-# Create the app instance
 app = App()
 
 make_title_page(app)
@@ -26,12 +21,19 @@ make_player(app, redis_client)
 
 app.set_active_page("main_menu")
 
-try:
-    app.run()
-finally:
-    redis_client.publish('stop:all', 'process')
-    app.set_active_page("title")
+def graceful_exit(signum, frame):
+    logging.info("Graceful exit initiated.")
+    redis_client.publish('process', 'stop:all')
+    # app.set_active_page("title", force_refresh=True)
+    # time.sleep(1)
     app.stop()
-    if proc_thread:
-        proc_thread.join()
-    sys.exit()
+    proc_manager.stop()
+    sys.exit(0)
+
+try:
+    proc_manager.start()
+    app.run()
+except Exception as e:
+    logging.error(f"Error running app: {e}")
+finally:
+    graceful_exit(None, None)

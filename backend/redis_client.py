@@ -39,6 +39,12 @@ def ctl_message(cmd):
     }
     return json.dumps(message_dict)
 
+def publish(channel, message):
+    redis_client = RedisClient()
+    redis_client.publish(message, channel)
+    redis_client.redis.close()
+
+
 class RedisClient:
     """
     Client wrapper for managing Shairplay-sync device states using Redis.
@@ -54,7 +60,7 @@ class RedisClient:
     def __init__(self, host='localhost', port=6379, db=0):
         self.redis = redis.Redis(host=host, port=port, db=db, decode_responses=True)
 
-    def publish(self, line, channel='crec'):
+    def publish(self, line, channel='metadata'):
         self.redis.publish(channel, line)
 
     def set_device_status(self, status_data):

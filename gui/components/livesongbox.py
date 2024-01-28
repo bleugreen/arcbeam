@@ -2,7 +2,7 @@ from PIL import ImageDraw, ImageFont
 from backend import RedisClient
 from . import LiveComponent
 
-DEFAULT_FONT_PATH = "../fonts/ARCADE_R.TTF"
+DEFAULT_FONT_PATH = "gui/fonts/ARCADE_R.TTF"
 DEFAULT_FONT_SIZE = 18
 BG_MARGIN = 5
 MIN_FONT_SIZE = 8

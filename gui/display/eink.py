@@ -145,7 +145,10 @@ class EInkDisplay:
 
     def stop(self):
         self.flag_t = 0
-        self.epd.sleep()
-        time.sleep(2)
-        self.t1.join()
+        if not self.is_sleeping:
+            self.sleep()
+        if self.t1.is_alive():
+            self.t1.join(timeout=10)
+            if self.t1.is_alive():
+                logging.warning("Touch thread did not terminate.")
         self.epd.Dev_exit()

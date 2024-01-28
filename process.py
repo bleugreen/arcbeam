@@ -1,41 +1,66 @@
 import os
 import subprocess
-import redis
+import logging
+from backend import RedisSubscriber, publish
 from config import PYTHON_PATH
-process = None
+import time
+import json
 
-def main():
-    global process
-    redis_client = redis.Redis()
-    pubsub = redis_client.pubsub()
-    pubsub.subscribe('process')
+logging.basicConfig(level=logging.INFO)
 
-    def stop_process():
-        global process
-        if process:
-            process.terminate()
-            process = None
+class ProcessManager:
+    def __init__(self):
+        self.process = None
+        self.subscriber = RedisSubscriber('process', self.handle_message, start_now=False)
+        self.curr_process = None
+    def start(self):
+        self.subscriber.start()
+        logging.info(f"Process manager started. {self.subscriber.thread.is_alive()}")
 
-    for message in pubsub.listen():
-        if message['type'] == 'message':
-            command = message['data'].decode('utf-8')
-            print(f"Received command: {command}")
+    def stop_process(self):
+        if self.process:
+            self.process.terminate()
+            try:
+                self.process.wait(timeout=10)
+                logging.info("Process terminated gracefully.")
+            except subprocess.TimeoutExpired:
+                self.process.kill()
+                logging.warning("Process had to be killed.")
+            self.process = None
 
-            if command == 'stop:all':
-                stop_process()
-                break
-            elif 'stop' in command:
-                stop_process()
-            elif command.startswith('start:'):
-                stop_process()
-                project_root = os.path.dirname(os.path.abspath(__file__))
+    def handle_message(self, command):
+        logging.info(f"Received command: {command}")
+        if command == 'stop:all':
+            self.stop()
+        elif 'stop' in command:
+            if self.curr_process == 'player':
+                publish('player', json.dumps({'command': 'stop'}))
+                time.sleep(0.2)
+            self.stop_process()
+        elif command.startswith('start:'):
+            self.stop_process()
+            project_root = os.path.dirname(os.path.abspath(__file__))
+            process_command = []
+            if command == 'start:recorder':
+                self.curr_process = 'recorder'
+                process_command = [PYTHON_PATH, 'recording/recorder.py']
+            elif command == 'start:player':
+                self.curr_process = 'player'
+                process_command = [PYTHON_PATH, '-m', 'player']
+            if process_command:
+                logging.info(f"Starting process: {process_command}")
+                self.process = subprocess.Popen(process_command, cwd=project_root)
 
-                if command == 'start:recorder':
-                    process_command = [PYTHON_PATH, '-m', 'recording.recorder']
-                elif command == 'start:player':
-                    process_command = [PYTHON_PATH, '-m', 'player']
-                print(f"Starting process: {process_command}")
-                process = subprocess.Popen(process_command, cwd=project_root)
+    def stop(self):
+        self.stop_process()
+        self.subscriber.stop()
 
 if __name__ == "__main__":
-    main()
+    manager = ProcessManager()
+    try:
+        print("Starting process manager...")
+        manager.start()
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
+    finally:
+        manager.stop()
