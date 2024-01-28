@@ -4,7 +4,7 @@ import os
 from backend import RedisClient
 import json
 import time
-from gui import (App, Button, LivePage, LiveSongBox, Menu, ProgressBar,
+from application import (App, Button, LivePage, LiveSongBox, Menu, ProgressBar,
                  RecStatusBar, PaginatedList, KeyboardMenu)
 from config import PYTHON_PATH, LIB_PATH
 

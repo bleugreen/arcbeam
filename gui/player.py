@@ -1,5 +1,5 @@
 import json
-from gui import (Button, LivePage, LiveSongBox, ProgressBar)
+from application import (Button, LivePage, LiveSongBox, ProgressBar)
 
 
 def make_player(app, redis_client):
@@ -12,6 +12,7 @@ def make_player(app, redis_client):
             if btn.duration > 1:
                 redis_client.reset_browse()
                 redis_client.publish('stop', 'process')
+                redis_client.reset_song()
                 app.set_active_page("main_menu")
             else:
                 app.set_active_page("browser")

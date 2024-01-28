@@ -1,4 +1,4 @@
-from gui import (Button, Menu)
+from application import (Button, Menu)
 
 def make_title_page(app):
     def title_callback():

@@ -1,9 +1,9 @@
 import logging
 import sys
-from app import (make_browser, make_main_menu, make_player, make_recorder,
+from gui import (make_browser, make_main_menu, make_player, make_recorder,
                  make_title_page)
 from backend import RedisClient
-from gui import App
+from application import App
 from process import ProcessManager
 
 logging.basicConfig(level=logging.INFO)

@@ -5,8 +5,8 @@ import time
 import redis
 from backend import MusicDatabase, RedisClient
 from structs import AirplayDevice
-from .recording_proc import RecordingProcess
-from .util import clear_temp_files
+from recording.recording_proc import RecordingProcess
+from recording.util import clear_temp_files
 from config import LIB_FILETYPE, LIB_PATH
 
 

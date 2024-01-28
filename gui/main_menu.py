@@ -1,6 +1,6 @@
 import subprocess
 import os
-from gui import App, Button, Menu
+from application import App, Button, Menu
 from config import PYTHON_PATH
 
 def make_main_menu(app:App, redis_client):

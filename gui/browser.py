@@ -1,7 +1,7 @@
 import os
 import json
 import time
-from gui import PaginatedList, LivePage, LiveMenu, BrowserMenu, KeyboardMenu
+from application import PaginatedList, LivePage, LiveMenu, BrowserMenu, KeyboardMenu
 from config import LIB_PATH
 
 

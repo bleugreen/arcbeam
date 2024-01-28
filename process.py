@@ -43,7 +43,7 @@ class ProcessManager:
             process_command = []
             if command == 'start:recorder':
                 self.curr_process = 'recorder'
-                process_command = [PYTHON_PATH, 'recording/recorder.py']
+                process_command = [PYTHON_PATH, '-m','recorder']
             elif command == 'start:player':
                 self.curr_process = 'player'
                 process_command = [PYTHON_PATH, '-m', 'player']

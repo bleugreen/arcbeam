@@ -1,4 +1,4 @@
-from gui import (Button, LivePage, LiveSongBox, ProgressBar,
+from application import (Button, LivePage, LiveSongBox, ProgressBar,
                  RecStatusBar)
 
 
