@@ -157,42 +157,46 @@ class RecordingProcess:
             self.redis.set_rec_time_status(self.device, 'done')
 
 
-    def parse_progress(self, start, end):
-        if (self.rtp_type is None or self.rtp_type == 'firstframe'):
-            ms_left = self.ms_left()
-            if ms_left < 0:
-                self.song_end_rtp = start
-                if self.song_data.length.value is not None:
-                    self.song_start_rtp = self.song_end_rtp - \
-                        amt_ms_to_rtp(self.song_data.length.value)
-                print('hoping this is an approx ending ;)')
-            # elif self.ms_length() < 2000:
-            #     print(
-            #         f'{self.song_data.title} -- ignoring prog, hasnt started (i hope)')
-            #     # return
-            last_stamp = self.segments[-1].get_last()
-            if last_stamp is None:
-                rtp_since_start = 0
-            else:
-                rtp_since_start = self.segments[-1].get_last().rtp - start
+    def parse_progress(self, start, curr, end):
+        if start is None or curr is None or end is None:
+            print('Invalid RTP data received')
+            return False
 
-            ms_since_prog_start = amt_rtp_to_ms(rtp_since_start)
-            ms_since_rec_start = current_time_ms() - self.rec_start_ms
-            if abs(ms_since_prog_start) > 10000 and ms_since_rec_start < 10000:
-                print('prog rtp is too far in the past, ignoring')
-                return
+        # Determine if the message is relevant for the current song
+        ms_since_rec_start = current_time_ms() - self.rec_start_ms
+        ms_since_prog_start = amt_rtp_to_ms(curr - start)
+
+        song_length_ms = amt_rtp_to_ms(end - start)
+        threshold = song_length_ms * 0.1
+        if (ms_since_prog_start > threshold and ms_since_rec_start < threshold) or \
+        (ms_since_prog_start < threshold and ms_since_rec_start > threshold):
+            print('Progress message for another song, ignoring')
+            return False
+
+        if self.rtp_type in [None, 'firstframe'] or self.song_start_rtp is None or self.song_end_rtp is None:
             self.song_start_rtp = start
             self.song_end_rtp = end
             self.rtp_type = 'prog'
-            if self.is_recording:
-                self.redis.set_rec_time_status(self.device, 'locked')
-            print('setting prog rtp')
-        elif self.rtp_type == 'prog':
-            ms_change = amt_rtp_to_ms(abs(start - self.song_start_rtp))
-            if ms_change < 1000:  # typically indicates an adjustment
-                self.song_start_rtp = start
-                self.song_end_rtp = end
-                print('updating prog rtp')
+            self.redis.set_rec_time_status(self.device, 'locked')
+            print('Setting initial prog RTP values')
+            return True
+
+        # Handling for subsequent prog messages
+        if self.rtp_type == 'prog':
+            start_difference = abs(amt_rtp_to_ms(start - self.song_start_rtp))
+            end_difference = abs(amt_rtp_to_ms(end - self.song_end_rtp))
+
+            # Check for significant difference in RTP values
+            if start_difference > 1000 or end_difference > 1000:
+                print('Significant difference in prog RTP values, consider handling')
+                return False
+
+            # Minor adjustments in RTP values
+            self.song_start_rtp = start
+            self.song_end_rtp = end
+            print('Updating prog RTP values for minor adjustments')
+            return True
+
 
     def parse_first_frame(self, rtp, ms):
         self.segments[-1].add_stamp(rtp, ms)

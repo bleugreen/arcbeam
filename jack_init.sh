@@ -35,7 +35,8 @@ read_config_value() {
 
 # Kill existing jackd and shairport-sync processes
 kill_process "main.py"
-kill_process "recorder.py"
+kill_process "recorder"
+kill_process "player"
 kill_process "monitor.py"
 kill_process "shairport-sync"
 kill_process "alsa_out"
@@ -83,4 +84,4 @@ echo "JACK session set up complete. Starting Listener"
 
 /home/dev/env/bin/python /home/dev/arcbeam/monitor.py
 
-/home/dev/env/bin/python /home/dev/arcbeam/main.py
+# /home/dev/env/bin/python /home/dev/arcbeam/main.py

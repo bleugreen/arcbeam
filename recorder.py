@@ -52,7 +52,8 @@ class AirplayRecorder:
                 recording.parse_rtp(data['rtp'], data['ms'])
         elif datatype == 'progress':
             for recording in self.recordings:
-                recording.parse_progress(data['start'], data['end'])
+                if recording.parse_progress(data['start'],data['curr'], data['end']):
+                    return
         elif datatype == 'bundle':
             for recording in self.recordings:
                 success = recording.parse_bundle(data)
@@ -130,7 +131,7 @@ class AirplayRecorder:
             message = self.redis_pubsub.get_message(timeout=2)
             if message and message['type'] == 'message':
                 data = json.loads(message['data'].decode())
-                self.print_metadata(data)
+                # self.print_metadata(data)
                 self.process_metadata(data)
                 self.manage_recordings()
 
